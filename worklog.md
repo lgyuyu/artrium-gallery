@@ -364,3 +364,44 @@ Stage Summary:
 - 墙面天花板: 纯白+自发光
 - 亮度: 在原基础上再+20%
 - NoToneMapping确保白色纯净
+
+---
+Task ID: 20
+Agent: 主控Agent (Claude)
+Task: 严格按参考图重做展厅(灯带+灰墙+无筒灯灯具)
+
+Work Log:
+分析参考图 pasted_image_1782584874650.png:
+- 墙顶交界处有发光灯带(白色线条)分隔墙和顶，增加立体感
+- 墙面中灰、天花板浅灰、地面白
+- 嵌入式射灯(只有光斑无可见灯具)
+- 黑色画框
+
+重写 gallery-scene.tsx:
+1. 风格配置: wall #b8b8b8中灰, ceiling #e0e0e0浅灰, floor #f0f0f0白, frame #1a1a1a黑, lightColor #fff5e0暖白, ledColor #ffffff
+2. Floor组件: 简洁白色地面(去掉木纹)
+3. Room: 墙面无自发光(保持灰色), 天花板轻微自发光
+4. WallLEDStrip 新组件: 4条发光条沿墙顶交界
+   - 薄长方体(boxGeometry) emissive ledColor emissiveIntensity 2.5 toneMapped false
+   - rectAreaLight 向下照亮墙面
+   - 清晰分隔墙和顶，增加立体感
+5. FramedArtwork 射灯重做:
+   - 去掉丑陋筒灯灯具(外圈/内圈/灯泡球全删)
+   - 只保留极小灯点(几乎看不见)+光束+spotLight
+   - 光束 opacity 0.18 柔和
+   - 画框黑色无金线
+
+验证(Agent Browser + VLM):
+- 墙面中灰、天花板浅灰 ✓
+- 墙顶发光灯带清晰可见 ✓
+- 灯带清晰分隔墙和顶 ✓
+- 无丑陋筒灯灯具(只有光斑) ✓
+- 地面白色 ✓
+- 画框黑色 ✓
+- 空间立体感强 ✓
+- 与参考图相似度 8/10
+
+Stage Summary:
+- 严格按参考图重做: 灰墙+浅灰顶+白地+黑框+暖白聚光+墙顶灯带
+- 灯带是关键设计，分隔墙顶增加立体感
+- 射灯无可见灯具，只有光斑

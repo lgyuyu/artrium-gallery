@@ -23,47 +23,48 @@ const ROOM_D = 11     // 深（z）
 const WALL_H = 4.2    // 墙高
 
 // ============ 风格配置（参考视频：明亮简洁，木地板，白框，轨道射灯有光斑） ============
+// ============ 风格配置（参考图：灰色墙+浅灰顶+白地+黑色画框+暖白聚光+墙顶灯带） ============
 const STYLE_CONFIG: Record<Style, {
-  wall: string
-  wallTop: string       // 墙上部（画作以上）
-  floor: string
-  floorStripe: string   // 木纹深色条
-  ceiling: string
-  frame: string         // 画框（modern 用白细框）
+  wall: string           // 墙面（中灰）
+  ceiling: string        // 天花板（浅灰）
+  floor: string          // 地面（白）
+  floorStripe: string
+  frame: string          // 画框（黑）
   frameAccent: string
-  lightColor: string
+  lightColor: string     // 射灯暖白光
+  ledColor: string       // 灯带颜色
   ambient: number
   hemi: number
   spot: number
-  trackColor: string    // 轨道色
+  beamOpacity: number
 }> = {
   modern: {
-    wall: '#ffffff',       // 纯白墙面
-    wallTop: '#ffffff',
-    floor: '#c9b083',      // 浅木色
-    floorStripe: '#a8916a',// 木纹深色
-    ceiling: '#ffffff',    // 纯白天花板
-    frame: '#ffffff',      // 白色细框
-    frameAccent: '#d4b87a',
-    lightColor: '#ffffff', // 纯白光
-    ambient: 0.78,         // +20% (0.65→0.78)
-    hemi: 0.71,            // +20% (0.59→0.71)
-    spot: 15.6,            // +20% (13→15.6)
-    trackColor: '#2a2a2a',
+    wall: '#b8b8b8',        // 中灰墙面
+    ceiling: '#e0e0e0',     // 浅灰天花板
+    floor: '#f0f0f0',       // 白色地面
+    floorStripe: '#d8d8d8',
+    frame: '#1a1a1a',       // 黑色画框
+    frameAccent: '#888888',
+    lightColor: '#fff5e0',  // 暖白射灯光
+    ledColor: '#ffffff',    // 纯白灯带
+    ambient: 0.45,
+    hemi: 0.4,
+    spot: 14,
+    beamOpacity: 0.18,
   },
   cozy: {
-    wall: '#ffffff',       // 纯白墙面
-    wallTop: '#ffffff',
-    floor: '#9a7548',
-    floorStripe: '#7a5a32',
-    ceiling: '#ffffff',    // 纯白天花板
-    frame: '#5a3a1f',      // cozy 用深色框
-    frameAccent: '#d4a560',
-    lightColor: '#fff5e8', // cozy 略暖白
-    ambient: 0.86,         // +20% (0.72→0.86)
-    hemi: 0.78,            // +20% (0.65→0.78)
-    spot: 14.4,            // +20% (12→14.4)
-    trackColor: '#2a2a2a',
+    wall: '#b8b8b8',
+    ceiling: '#e0e0e0',
+    floor: '#f0f0f0',
+    floorStripe: '#d8d8d8',
+    frame: '#1a1a1a',
+    frameAccent: '#888888',
+    lightColor: '#fff0d8',  // cozy 略暖
+    ledColor: '#fff5e8',
+    ambient: 0.5,
+    hemi: 0.45,
+    spot: 13,
+    beamOpacity: 0.18,
   },
 }
 
@@ -90,63 +91,18 @@ const WALL_SLOTS: Array<{ pos: [number, number, number]; rot: [number, number, n
   { pos: [-6.92, ART_Y, -2.5], rot: [0, Math.PI / 2, 0] },
 ]
 
-// ============ 木地板（程序生成纹理） ============
-function WoodFloor({ style }: { style: Style }) {
+// ============ 白色地面（简洁哑光） ============
+function Floor({ style }: { style: Style }) {
   const cfg = STYLE_CONFIG[style]
-  const texture = useMemo(() => {
-    const c = document.createElement('canvas')
-    c.width = 512
-    c.height = 512
-    const ctx = c.getContext('2d')!
-    // 底色
-    ctx.fillStyle = cfg.floor
-    ctx.fillRect(0, 0, 512, 512)
-    // 木板条（横向，每条高 64px）
-    const plankH = 64
-    for (let i = 0; i < 512 / plankH; i++) {
-      const y = i * plankH
-      // 每条木板略微变色
-      const variant = (i % 3) * 8
-      ctx.fillStyle = cfg.floor
-      ctx.fillRect(0, y, 512, plankH)
-      // 木纹线（随机深色细线）
-      ctx.strokeStyle = cfg.floorStripe
-      ctx.globalAlpha = 0.25
-      ctx.lineWidth = 1
-      for (let k = 0; k < 8; k++) {
-        ctx.beginPath()
-        const sy = y + 8 + Math.random() * (plankH - 16)
-        ctx.moveTo(0, sy)
-        // 略微波动的线
-        for (let x = 0; x <= 512; x += 32) {
-          ctx.lineTo(x, sy + (Math.random() - 0.5) * 2)
-        }
-        ctx.stroke()
-      }
-      ctx.globalAlpha = 1
-      // 板缝
-      ctx.fillStyle = cfg.floorStripe
-      ctx.globalAlpha = 0.4
-      ctx.fillRect(0, y + plankH - 1, 512, 2)
-      ctx.globalAlpha = 1
-    }
-    const tex = new THREE.CanvasTexture(c)
-    tex.wrapS = THREE.RepeatWrapping
-    tex.wrapT = THREE.RepeatWrapping
-    tex.repeat.set(4, 3)
-    tex.colorSpace = THREE.SRGBColorSpace
-    return tex
-  }, [cfg.floor, cfg.floorStripe])
-
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
       <planeGeometry args={[ROOM_W, ROOM_D]} />
-      <meshStandardMaterial map={texture} roughness={0.7} metalness={0.05} />
+      <meshStandardMaterial color={cfg.floor} roughness={0.6} metalness={0.05} />
     </mesh>
   )
 }
 
-// ============ 房间（简洁：墙+顶+木地板，天花板轨道） ============
+// ============ 房间（墙+顶+地面+墙顶灯带） ============
 function Room({ style }: { style: Style }) {
   const cfg = STYLE_CONFIG[style]
   const halfW = ROOM_W / 2
@@ -154,36 +110,79 @@ function Room({ style }: { style: Style }) {
 
   return (
     <group>
-      <WoodFloor style={style} />
+      <Floor style={style} />
 
-      {/* 天花板 */}
+      {/* 天花板（浅灰，稍带自发光） */}
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, WALL_H, 0]} receiveShadow>
         <planeGeometry args={[ROOM_W, ROOM_D]} />
-        <meshStandardMaterial color={cfg.ceiling} roughness={0.95} emissive={cfg.ceiling} emissiveIntensity={0.35} />
+        <meshStandardMaterial color={cfg.ceiling} roughness={0.95} emissive={cfg.ceiling} emissiveIntensity={0.15} />
       </mesh>
 
-      {/* 四面墙（纯白，带轻微自发光确保不灰暗） */}
+      {/* 四面墙（中灰，无自发光，保持灰色质感） */}
       <mesh position={[0, WALL_H / 2, -halfD]} receiveShadow>
         <planeGeometry args={[ROOM_W, WALL_H]} />
-        <meshStandardMaterial color={cfg.wall} roughness={0.95} emissive={cfg.wall} emissiveIntensity={0.3} />
+        <meshStandardMaterial color={cfg.wall} roughness={0.95} />
       </mesh>
       <mesh position={[0, WALL_H / 2, halfD]} rotation={[0, Math.PI, 0]} receiveShadow>
         <planeGeometry args={[ROOM_W, WALL_H]} />
-        <meshStandardMaterial color={cfg.wall} roughness={0.95} emissive={cfg.wall} emissiveIntensity={0.3} />
+        <meshStandardMaterial color={cfg.wall} roughness={0.95} />
       </mesh>
       <mesh position={[-halfW, WALL_H / 2, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
         <planeGeometry args={[ROOM_D, WALL_H]} />
-        <meshStandardMaterial color={cfg.wall} roughness={0.95} emissive={cfg.wall} emissiveIntensity={0.3} />
+        <meshStandardMaterial color={cfg.wall} roughness={0.95} />
       </mesh>
       <mesh position={[halfW, WALL_H / 2, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
         <planeGeometry args={[ROOM_D, WALL_H]} />
-        <meshStandardMaterial color={cfg.wall} roughness={0.95} emissive={cfg.wall} emissiveIntensity={0.3} />
+        <meshStandardMaterial color={cfg.wall} roughness={0.95} />
       </mesh>
 
-      {/* 天花板（纯白，干净，无轨道） */}
+      {/* ===== 墙顶灯带（4条，沿墙顶交界处，发光线条分隔墙和顶）===== */}
+      <WallLEDStrip style={style} />
 
       {/* 中央茶几 */}
       <TeaTable style={style} />
+    </group>
+  )
+}
+
+// ============ 墙顶灯带（4条发光条，沿墙顶交界） ============
+function WallLEDStrip({ style }: { style: Style }) {
+  const cfg = STYLE_CONFIG[style]
+  const halfW = ROOM_W / 2
+  const halfD = ROOM_D / 2
+  const stripY = WALL_H - 0.05  // 灯带贴近墙顶
+  // 灯带：细长发光条 + 向下照射的条形光
+  const strips = [
+    { pos: [0, stripY, -halfD + 0.02] as [number, number, number], rot: [0, 0, 0] as [number, number, number], w: ROOM_W },
+    { pos: [0, stripY, halfD - 0.02] as [number, number, number], rot: [0, Math.PI, 0] as [number, number, number], w: ROOM_W },
+    { pos: [-halfW + 0.02, stripY, 0] as [number, number, number], rot: [0, Math.PI / 2, 0] as [number, number, number], w: ROOM_D },
+    { pos: [halfW - 0.02, stripY, 0] as [number, number, number], rot: [0, -Math.PI / 2, 0] as [number, number, number], w: ROOM_D },
+  ]
+  return (
+    <group>
+      {strips.map((s, i) => (
+        <group key={i} position={s.pos} rotation={s.rot}>
+          {/* 发光条（薄长方体，自发光） */}
+          <mesh position={[0, 0, 0]}>
+            <boxGeometry args={[s.w, 0.04, 0.02]} />
+            <meshStandardMaterial
+              color={cfg.ledColor}
+              emissive={cfg.ledColor}
+              emissiveIntensity={2.5}
+              toneMapped={false}
+            />
+          </mesh>
+          {/* 条形光源（向下照亮墙面） */}
+          <rectAreaLight
+            position={[0, -0.1, 0.1]}
+            width={s.w}
+            height={0.3}
+            intensity={3}
+            color={cfg.ledColor}
+            rotation={[-Math.PI / 2, 0, 0]}
+          />
+        </group>
+      ))}
     </group>
   )
 }
@@ -270,16 +269,16 @@ function FramedArtwork({
     }
   }, [targetObj])
 
-  // 画作尺寸（单排，较大，4:5纵向）
+  // 画作尺寸（单排，4:5纵向）
   const W = 1.5
   const H = 1.88
-  // 画框：modern 白色细框
-  const frameThickness = style === 'modern' ? 0.04 : 0.06
+  // 画框：黑色细框
+  const frameThickness = 0.05
   const frameW = W + frameThickness * 2
   const frameH = H + frameThickness * 2
-  // 射灯：嵌入式小筒灯，从天花板垂直向下照画作
-  const lampY = WALL_H - slot.pos[1] - 0.25   // 灯贴近天花板（嵌入式）
-  const lampZ = 0.35                           // 灯在画作前方0.35m（让光斑落在画上）
+  // 射灯：嵌入式，从天花板垂直向下照画作（无可见灯具，只有光斑）
+  const lampY = WALL_H - slot.pos[1] - 0.05   // 灯贴天花板
+  const lampZ = 0.35                           // 灯在画作前方0.35m
   const beamLen = lampY                        // 垂直光束长度
   const beamAngle = 0.26                       // 聚焦角度
   const beamR = beamLen * Math.tan(beamAngle)
@@ -302,15 +301,10 @@ function FramedArtwork({
         document.body.style.cursor = 'auto'
       }}
     >
-      {/* 画框（细框，modern白色，cozy深色） */}
+      {/* 画框（黑色，简约） */}
       <mesh position={[0, 0, -0.03]} castShadow>
         <boxGeometry args={[frameW, frameH, 0.06]} />
-        <meshStandardMaterial color={cfg.frame} roughness={0.4} metalness={style === 'modern' ? 0.1 : 0.15} />
-      </mesh>
-      {/* 画框内侧金线（细） */}
-      <mesh position={[0, 0, 0.002]}>
-        <planeGeometry args={[W + 0.01, H + 0.01]} />
-        <meshStandardMaterial color={cfg.frameAccent} metalness={0.6} roughness={0.3} />
+        <meshStandardMaterial color={cfg.frame} roughness={0.5} metalness={0.1} />
       </mesh>
 
       {/* 画作贴图 */}
@@ -318,46 +312,36 @@ function FramedArtwork({
         <ArtworkPlane url={artwork.imageUrl} W={W} H={H} hovered={hovered} />
       </Suspense>
 
-      {/* ===== 嵌入式筒灯（从天花板垂直向下照画作）===== */}
-      {/* 筒灯外圈（嵌入天花板的黑色环） */}
-      <mesh position={[0, lampY + 0.05, lampZ]}>
-        <cylinderGeometry args={[0.1, 0.1, 0.08, 20]} />
-        <meshStandardMaterial color="#1a1a1a" metalness={0.8} roughness={0.25} />
-      </mesh>
-      {/* 筒灯内圈（黑色） */}
-      <mesh position={[0, lampY + 0.02, lampZ]}>
-        <cylinderGeometry args={[0.085, 0.085, 0.06, 20]} />
-        <meshStandardMaterial color="#0a0a0a" metalness={0.6} roughness={0.4} />
-      </mesh>
-      {/* 灯泡发光球（小而亮） */}
-      <mesh position={[0, lampY - 0.01, lampZ]}>
-        <sphereGeometry args={[0.055, 16, 16]} />
-        <meshStandardMaterial color={cfg.lightColor} emissive={cfg.lightColor} emissiveIntensity={3} />
+      {/* ===== 嵌入式射灯（无可见灯具，只有光斑+光束）===== */}
+      {/* 天花板上极小的灯点（几乎看不见） */}
+      <mesh position={[0, lampY, lampZ]}>
+        <cylinderGeometry args={[0.03, 0.03, 0.02, 12]} />
+        <meshStandardMaterial color="#000000" />
       </mesh>
 
-      {/* 可见光束（垂直向下的圆锥，锐利清晰） */}
-      <mesh position={[0, lampY / 2 - 0.05, lampZ]}>
-        <coneGeometry args={[beamR, beamLen - 0.1, 24, 1, true]} />
+      {/* 可见光束（垂直向下的圆锥，柔和） */}
+      <mesh position={[0, lampY / 2, lampZ]}>
+        <coneGeometry args={[beamR, beamLen, 24, 1, true]} />
         <meshBasicMaterial
           color={cfg.lightColor}
           transparent
-          opacity={0.28}
+          opacity={cfg.beamOpacity}
           side={THREE.DoubleSide}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
         />
       </mesh>
 
-      {/* 聚光灯光源（从灯泡位置垂直向下照，锐利光斑） */}
+      {/* 聚光灯光源（从天花板照向画作） */}
       <spotLight
         ref={spotRef}
-        position={[0, lampY - 0.05, lampZ]}
+        position={[0, lampY, lampZ]}
         angle={beamAngle}
-        penumbra={0.25}
+        penumbra={0.35}
         intensity={cfg.spot}
         color={cfg.lightColor}
         distance={7}
-        decay={0.5}
+        decay={0.6}
       />
       {/* spotLight target 在画作中心 */}
       <primitive object={targetObj} position={[0, 0, 0]} />
