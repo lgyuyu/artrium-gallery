@@ -11,9 +11,9 @@ async function main() {
   // 1. 机构信息
   const org = await db.organization.create({
     data: {
-      name: '艺境美术 ARTRIUM',
+      name: '星玥艺术',
       slogan: '让每个孩子都拥有属于自己的画展',
-      logo: '/logo-artium.png',
+      logo: '/logo-xingyue.png',
       defaultStyle: 'modern',
       adminPassword: 'art2025',
     },
@@ -61,9 +61,9 @@ async function main() {
   ])
   console.log('✅ 已创建', students.length, '位学生')
 
-  // 3. 画作（8幅，分配给4位学生）
+  // 3. 画作（8幅，前两位学生各4幅以展示上下双排布局）
   const artworks = [
-    // 小明 - 风景系 (modern)
+    // 小明 - 风景系 (modern) 4幅
     {
       studentIdx: 0,
       title: '夕阳下的远山',
@@ -80,41 +80,23 @@ async function main() {
       description: '向梵高致敬的星空，小镇在璀璨星辰下安然入梦。',
       order: 1,
     },
-    // 小红 - 色彩系 (modern)
     {
-      studentIdx: 1,
+      studentIdx: 0,
       title: '快乐的我',
       imageUrl: '/artworks/art-2.jpg',
       artworkDate: '2025年3月',
       description: '画一个最开心的自己，蜡笔的笔触藏不住满心的欢喜。',
-      order: 0,
+      order: 2,
     },
     {
-      studentIdx: 1,
-      title: '我的小猫',
-      imageUrl: '/artworks/art-3.jpg',
-      artworkDate: '2025年6月',
-      description: '家里的小猫总爱在窗边晒太阳，彩铅细细描出它的柔软。',
-      order: 1,
-    },
-    // 小华 - 想象系 (cozy)
-    {
-      studentIdx: 2,
+      studentIdx: 0,
       title: '墨竹',
       imageUrl: '/artworks/art-5.jpg',
       artworkDate: '2025年5月',
       description: '第一次学习传统水墨，竹节的顿挫间有模有样。',
-      order: 0,
+      order: 3,
     },
-    {
-      studentIdx: 2,
-      title: '我的城市',
-      imageUrl: '/artworks/art-8.jpg',
-      artworkDate: '2025年5月',
-      description: '拼贴出心中的未来城市，高楼与花园共存。',
-      order: 1,
-    },
-    // 小丽 - 静物系 (cozy)
+    // 小丽 - 静物系 (cozy) 4幅
     {
       studentIdx: 3,
       title: '桌上的静物',
@@ -130,6 +112,22 @@ async function main() {
       artworkDate: '2025年2月',
       description: '用手指点出满园春色，纯真的指尖开出了花。',
       order: 1,
+    },
+    {
+      studentIdx: 3,
+      title: '我的小猫',
+      imageUrl: '/artworks/art-3.jpg',
+      artworkDate: '2025年6月',
+      description: '家里的小猫总爱在窗边晒太阳，彩铅细细描出它的柔软。',
+      order: 2,
+    },
+    {
+      studentIdx: 3,
+      title: '我的城市',
+      imageUrl: '/artworks/art-8.jpg',
+      artworkDate: '2025年5月',
+      description: '拼贴出心中的未来城市，高楼与花园共存。',
+      order: 3,
     },
   ]
 

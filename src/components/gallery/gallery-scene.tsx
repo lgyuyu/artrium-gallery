@@ -17,73 +17,153 @@ export interface Artwork3D {
 
 type Style = 'modern' | 'cozy'
 
-// ============ 房间尺寸（缩小20%：14×11） ============
+// ============ 房间尺寸 ============
 const ROOM_W = 14     // 宽（x）
 const ROOM_D = 11     // 深（z）
 const WALL_H = 4.2    // 墙高
-const ART_Y = 2.1     // 画作中心高度
 
-// ============ 风格配置（简洁、明亮） ============
+// ============ 风格配置（参考视频：明亮简洁，木地板，白框，轨道射灯有光斑） ============
 const STYLE_CONFIG: Record<Style, {
   wall: string
+  wallTop: string       // 墙上部（画作以上）
   floor: string
+  floorStripe: string   // 木纹深色条
   ceiling: string
-  frame: string
+  frame: string         // 画框（modern 用白细框）
   frameAccent: string
   lightColor: string
   ambient: number
   hemi: number
   spot: number
-  carpet?: string
+  trackColor: string    // 轨道色
 }> = {
   modern: {
-    wall: '#f2efe8',
-    floor: '#cfc0a0',
-    ceiling: '#faf8f3',
-    frame: '#1a1a1a',
-    frameAccent: '#c89b5a',
+    wall: '#f5f1e8',       // 暖米白
+    wallTop: '#f5f1e8',
+    floor: '#c9b083',      // 浅木色
+    floorStripe: '#a8916a',// 木纹深色
+    ceiling: '#fcfaf5',
+    frame: '#ffffff',      // 白色细框
+    frameAccent: '#d4b87a',
     lightColor: '#fff8ec',
-    ambient: 0.55,
-    hemi: 0.5,
-    spot: 8,
+    ambient: 0.5,
+    hemi: 0.45,
+    spot: 10,
+    trackColor: '#2a2a2a',
   },
   cozy: {
     wall: '#e8d8be',
+    wallTop: '#e8d8be',
     floor: '#9a7548',
+    floorStripe: '#7a5a32',
     ceiling: '#f3e8d2',
-    frame: '#5a3a1f',
+    frame: '#5a3a1f',      // cozy 用深色框
     frameAccent: '#d4a560',
     lightColor: '#ffe8c0',
-    ambient: 0.6,
-    hemi: 0.55,
-    spot: 7.5,
-    carpet: '#b8825a',
+    ambient: 0.55,
+    hemi: 0.5,
+    spot: 9,
+    trackColor: '#2a2a2a',
   },
 }
 
-// ============ 画作墙位槽位（14幅，间距3m） ============
+// ============ 画作墙位槽位（参考视频：上下双排，列优先填充） ============
+// 每面墙两排，上排 y=2.6，下排 y=1.4
+// 列优先：先填满一列的上+下，再下一列，这样少量画作也能看到双排
+const UPPER_Y = 2.6
+const LOWER_Y = 1.4
 const WALL_SLOTS: Array<{ pos: [number, number, number]; rot: [number, number, number] }> = [
-  // 后墙 z=-5.42 朝 +z （4幅）
-  { pos: [-4.5, ART_Y, -5.42], rot: [0, 0, 0] },
-  { pos: [-1.5, ART_Y, -5.42], rot: [0, 0, 0] },
-  { pos: [1.5, ART_Y, -5.42], rot: [0, 0, 0] },
-  { pos: [4.5, ART_Y, -5.42], rot: [0, 0, 0] },
-  // 右墙 x=6.92 朝 -x （3幅）
-  { pos: [6.92, ART_Y, -2.5], rot: [0, -Math.PI / 2, 0] },
-  { pos: [6.92, ART_Y, 0], rot: [0, -Math.PI / 2, 0] },
-  { pos: [6.92, ART_Y, 2.5], rot: [0, -Math.PI / 2, 0] },
-  // 前墙 z=5.42 朝 -z （4幅）
-  { pos: [4.5, ART_Y, 5.42], rot: [0, Math.PI, 0] },
-  { pos: [1.5, ART_Y, 5.42], rot: [0, Math.PI, 0] },
-  { pos: [-1.5, ART_Y, 5.42], rot: [0, Math.PI, 0] },
-  { pos: [-4.5, ART_Y, 5.42], rot: [0, Math.PI, 0] },
-  // 左墙 x=-6.92 朝 +x （3幅）
-  { pos: [-6.92, ART_Y, 2.5], rot: [0, Math.PI / 2, 0] },
-  { pos: [-6.92, ART_Y, 0], rot: [0, Math.PI / 2, 0] },
-  { pos: [-6.92, ART_Y, -2.5], rot: [0, Math.PI / 2, 0] },
+  // 后墙 z=-5.42 朝 +z （列优先：上1,下1,上2,下2,上3,下3,上4,下4）
+  { pos: [-4.5, UPPER_Y, -5.42], rot: [0, 0, 0] },
+  { pos: [-4.5, LOWER_Y, -5.42], rot: [0, 0, 0] },
+  { pos: [-1.5, UPPER_Y, -5.42], rot: [0, 0, 0] },
+  { pos: [-1.5, LOWER_Y, -5.42], rot: [0, 0, 0] },
+  { pos: [1.5, UPPER_Y, -5.42], rot: [0, 0, 0] },
+  { pos: [1.5, LOWER_Y, -5.42], rot: [0, 0, 0] },
+  { pos: [4.5, UPPER_Y, -5.42], rot: [0, 0, 0] },
+  { pos: [4.5, LOWER_Y, -5.42], rot: [0, 0, 0] },
+  // 右墙 x=6.92 朝 -x （列优先）
+  { pos: [6.92, UPPER_Y, -2.5], rot: [0, -Math.PI / 2, 0] },
+  { pos: [6.92, LOWER_Y, -2.5], rot: [0, -Math.PI / 2, 0] },
+  { pos: [6.92, UPPER_Y, 0], rot: [0, -Math.PI / 2, 0] },
+  { pos: [6.92, LOWER_Y, 0], rot: [0, -Math.PI / 2, 0] },
+  { pos: [6.92, UPPER_Y, 2.5], rot: [0, -Math.PI / 2, 0] },
+  { pos: [6.92, LOWER_Y, 2.5], rot: [0, -Math.PI / 2, 0] },
+  // 前墙 z=5.42 朝 -z （列优先）
+  { pos: [4.5, UPPER_Y, 5.42], rot: [0, Math.PI, 0] },
+  { pos: [4.5, LOWER_Y, 5.42], rot: [0, Math.PI, 0] },
+  { pos: [1.5, UPPER_Y, 5.42], rot: [0, Math.PI, 0] },
+  { pos: [1.5, LOWER_Y, 5.42], rot: [0, Math.PI, 0] },
+  { pos: [-1.5, UPPER_Y, 5.42], rot: [0, Math.PI, 0] },
+  { pos: [-1.5, LOWER_Y, 5.42], rot: [0, Math.PI, 0] },
+  { pos: [-4.5, UPPER_Y, 5.42], rot: [0, Math.PI, 0] },
+  { pos: [-4.5, LOWER_Y, 5.42], rot: [0, Math.PI, 0] },
+  // 左墙 x=-6.92 朝 +x （列优先）
+  { pos: [-6.92, UPPER_Y, 2.5], rot: [0, Math.PI / 2, 0] },
+  { pos: [-6.92, LOWER_Y, 2.5], rot: [0, Math.PI / 2, 0] },
+  { pos: [-6.92, UPPER_Y, 0], rot: [0, Math.PI / 2, 0] },
+  { pos: [-6.92, LOWER_Y, 0], rot: [0, Math.PI / 2, 0] },
+  { pos: [-6.92, UPPER_Y, -2.5], rot: [0, Math.PI / 2, 0] },
+  { pos: [-6.92, LOWER_Y, -2.5], rot: [0, Math.PI / 2, 0] },
 ]
 
-// ============ 房间（简洁：只保留墙/地/顶，无多余线条） ============
+// ============ 木地板（程序生成纹理） ============
+function WoodFloor({ style }: { style: Style }) {
+  const cfg = STYLE_CONFIG[style]
+  const texture = useMemo(() => {
+    const c = document.createElement('canvas')
+    c.width = 512
+    c.height = 512
+    const ctx = c.getContext('2d')!
+    // 底色
+    ctx.fillStyle = cfg.floor
+    ctx.fillRect(0, 0, 512, 512)
+    // 木板条（横向，每条高 64px）
+    const plankH = 64
+    for (let i = 0; i < 512 / plankH; i++) {
+      const y = i * plankH
+      // 每条木板略微变色
+      const variant = (i % 3) * 8
+      ctx.fillStyle = cfg.floor
+      ctx.fillRect(0, y, 512, plankH)
+      // 木纹线（随机深色细线）
+      ctx.strokeStyle = cfg.floorStripe
+      ctx.globalAlpha = 0.25
+      ctx.lineWidth = 1
+      for (let k = 0; k < 8; k++) {
+        ctx.beginPath()
+        const sy = y + 8 + Math.random() * (plankH - 16)
+        ctx.moveTo(0, sy)
+        // 略微波动的线
+        for (let x = 0; x <= 512; x += 32) {
+          ctx.lineTo(x, sy + (Math.random() - 0.5) * 2)
+        }
+        ctx.stroke()
+      }
+      ctx.globalAlpha = 1
+      // 板缝
+      ctx.fillStyle = cfg.floorStripe
+      ctx.globalAlpha = 0.4
+      ctx.fillRect(0, y + plankH - 1, 512, 2)
+      ctx.globalAlpha = 1
+    }
+    const tex = new THREE.CanvasTexture(c)
+    tex.wrapS = THREE.RepeatWrapping
+    tex.wrapT = THREE.RepeatWrapping
+    tex.repeat.set(4, 3)
+    tex.colorSpace = THREE.SRGBColorSpace
+    return tex
+  }, [cfg.floor, cfg.floorStripe])
+
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
+      <planeGeometry args={[ROOM_W, ROOM_D]} />
+      <meshStandardMaterial map={texture} roughness={0.7} metalness={0.05} />
+    </mesh>
+  )
+}
+
+// ============ 房间（简洁：墙+顶+木地板，天花板轨道） ============
 function Room({ style }: { style: Style }) {
   const cfg = STYLE_CONFIG[style]
   const halfW = ROOM_W / 2
@@ -91,18 +171,7 @@ function Room({ style }: { style: Style }) {
 
   return (
     <group>
-      {/* 地板 */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
-        <planeGeometry args={[ROOM_W, ROOM_D]} />
-        <meshStandardMaterial color={cfg.floor} roughness={0.7} metalness={0.05} />
-      </mesh>
-      {/* cozy 风格加地毯 */}
-      {cfg.carpet && (
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]} receiveShadow>
-          <planeGeometry args={[7, 5]} />
-          <meshStandardMaterial color={cfg.carpet} roughness={0.95} />
-        </mesh>
-      )}
+      <WoodFloor style={style} />
 
       {/* 天花板 */}
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, WALL_H, 0]} receiveShadow>
@@ -110,7 +179,7 @@ function Room({ style }: { style: Style }) {
         <meshStandardMaterial color={cfg.ceiling} roughness={0.95} />
       </mesh>
 
-      {/* 四面墙（单色，无分色无腰线） */}
+      {/* 四面墙（单色，简洁） */}
       <mesh position={[0, WALL_H / 2, -halfD]} receiveShadow>
         <planeGeometry args={[ROOM_W, WALL_H]} />
         <meshStandardMaterial color={cfg.wall} roughness={0.95} />
@@ -127,11 +196,19 @@ function Room({ style }: { style: Style }) {
         <planeGeometry args={[ROOM_D, WALL_H]} />
         <meshStandardMaterial color={cfg.wall} roughness={0.95} />
       </mesh>
+
+      {/* 天花板轨道射灯（黑色长条，沿x方向，两条） */}
+      {[-3, 3].map((z) => (
+        <mesh key={`track-${z}`} position={[0, WALL_H - 0.12, z]}>
+          <boxGeometry args={[ROOM_W - 0.5, 0.06, 0.1]} />
+          <meshStandardMaterial color={cfg.trackColor} metalness={0.7} roughness={0.3} />
+        </mesh>
+      ))}
     </group>
   )
 }
 
-// ============ 带框画作 + 专有射灯（真正射出光束） ============
+// ============ 带框画作 + 轨道射灯（光斑打在画上） ============
 function FramedArtwork({
   artwork,
   slot,
@@ -148,24 +225,24 @@ function FramedArtwork({
   const spotRef = useRef<THREE.SpotLight>(null)
   const targetObj = useMemo(() => new THREE.Object3D(), [])
 
-  // 把 spotLight 的 target 挂到画作中心
   useEffect(() => {
     if (spotRef.current) {
       spotRef.current.target = targetObj
     }
   }, [targetObj])
 
-  // 画作尺寸（4:5）
-  const W = 1.5
-  const H = 1.88
-  const frameW = W + 0.12
-  const frameH = H + 0.12
-  // 射灯位置：画作上方 1.1m，前方 0.75m
-  const lampY = H / 2 + 1.1
-  const lampZ = 0.75
-  // 光束参数
+  // 画作尺寸（双排，稍小一些）
+  const W = 1.3
+  const H = 1.0   // 4:3 略横向，适合双排
+  // 画框：modern 白色细框
+  const frameThickness = style === 'modern' ? 0.04 : 0.06
+  const frameW = W + frameThickness * 2
+  const frameH = H + frameThickness * 2
+  // 射灯位置：画作上方 0.9m，前方 0.6m
+  const lampY = H / 2 + 0.9
+  const lampZ = 0.6
   const beamLen = Math.sqrt(lampY * lampY + lampZ * lampZ)
-  const beamAngle = 0.32
+  const beamAngle = 0.3
   const beamR = beamLen * Math.tan(beamAngle)
 
   return (
@@ -186,20 +263,15 @@ function FramedArtwork({
         document.body.style.cursor = 'auto'
       }}
     >
-      {/* 画框 */}
-      <mesh position={[0, 0, -0.04]} castShadow>
-        <boxGeometry args={[frameW, frameH, 0.08]} />
-        <meshStandardMaterial color={cfg.frame} roughness={0.45} metalness={style === 'modern' ? 0.35 : 0.15} />
+      {/* 画框（细框，modern白色，cozy深色） */}
+      <mesh position={[0, 0, -0.03]} castShadow>
+        <boxGeometry args={[frameW, frameH, 0.06]} />
+        <meshStandardMaterial color={cfg.frame} roughness={0.4} metalness={style === 'modern' ? 0.1 : 0.15} />
       </mesh>
-      {/* 金色内框线 */}
-      <mesh position={[0, 0, 0.001]}>
-        <planeGeometry args={[frameW - 0.04, frameH - 0.04]} />
-        <meshStandardMaterial color={cfg.frameAccent} metalness={0.75} roughness={0.25} />
-      </mesh>
-      {/* 卡纸 */}
-      <mesh position={[0, 0, 0.005]}>
-        <planeGeometry args={[W + 0.06, H + 0.06]} />
-        <meshStandardMaterial color="#f8f5ee" roughness={0.9} />
+      {/* 画框内侧金线（细） */}
+      <mesh position={[0, 0, 0.002]}>
+        <planeGeometry args={[W + 0.01, H + 0.01]} />
+        <meshStandardMaterial color={cfg.frameAccent} metalness={0.6} roughness={0.3} />
       </mesh>
 
       {/* 画作贴图 */}
@@ -207,64 +279,58 @@ function FramedArtwork({
         <ArtworkPlane url={artwork.imageUrl} W={W} H={H} hovered={hovered} />
       </Suspense>
 
-      {/* ===== 专有射灯：灯具 + 可见光束 + 光源 ===== */}
-      {/* 连接杆到天花板 */}
-      <mesh position={[0, WALL_H - slot.pos[1] - 0.15, lampZ]}>
-        <cylinderGeometry args={[0.015, 0.015, 0.4, 8]} />
-        <meshStandardMaterial color="#2a2a2a" metalness={0.6} roughness={0.4} />
-      </mesh>
-      {/* 灯头本体（朝画作倾斜） */}
+      {/* ===== 轨道射灯（从天花板轨道照向画作，有可见光束） ===== */}
+      {/* 灯头（小圆柱，朝画作倾斜） */}
       <group position={[0, lampY, lampZ]} rotation={[Math.PI / 2 - Math.atan2(lampZ, lampY), 0, 0]}>
         <mesh>
-          <cylinderGeometry args={[0.09, 0.11, 0.22, 20]} />
+          <cylinderGeometry args={[0.06, 0.08, 0.16, 16]} />
           <meshStandardMaterial color="#1a1a1a" metalness={0.85} roughness={0.2} />
         </mesh>
-        {/* 灯口金色环 */}
-        <mesh position={[0, -0.12, 0]}>
-          <cylinderGeometry args={[0.115, 0.115, 0.04, 20]} />
-          <meshStandardMaterial color={cfg.frameAccent} metalness={0.85} roughness={0.15} emissive={cfg.lightColor} emissiveIntensity={0.6} />
+        {/* 灯口 */}
+        <mesh position={[0, -0.09, 0]}>
+          <cylinderGeometry args={[0.085, 0.085, 0.03, 16]} />
+          <meshStandardMaterial color={cfg.frameAccent} metalness={0.8} roughness={0.2} emissive={cfg.lightColor} emissiveIntensity={0.8} />
         </mesh>
-        {/* 灯泡发光球 */}
-        <mesh position={[0, -0.1, 0]}>
-          <sphereGeometry args={[0.07, 20, 20]} />
-          <meshStandardMaterial color={cfg.lightColor} emissive={cfg.lightColor} emissiveIntensity={1.5} />
+        {/* 灯泡 */}
+        <mesh position={[0, -0.07, 0]}>
+          <sphereGeometry args={[0.055, 16, 16]} />
+          <meshStandardMaterial color={cfg.lightColor} emissive={cfg.lightColor} emissiveIntensity={1.8} />
         </mesh>
       </group>
 
-      {/* 可见光束（半透明圆锥，从灯头到画作） */}
+      {/* 可见光束（半透明圆锥，从灯到画，形成光斑效果） */}
       <mesh
         position={[0, lampY / 2, lampZ / 2]}
         rotation={[-Math.atan2(lampZ, lampY), 0, 0]}
       >
-        <coneGeometry args={[beamR, beamLen, 24, 1, true]} />
+        <coneGeometry args={[beamR, beamLen, 20, 1, true]} />
         <meshBasicMaterial
           color={cfg.lightColor}
           transparent
-          opacity={0.08}
+          opacity={0.12}
           side={THREE.DoubleSide}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
         />
       </mesh>
 
-      {/* 聚光灯光源（真正照亮画作） */}
+      {/* 聚光灯光源（照亮画作） */}
       <spotLight
         ref={spotRef}
         position={[0, lampY - 0.05, lampZ]}
         angle={beamAngle}
-        penumbra={0.4}
+        penumbra={0.35}
         intensity={cfg.spot}
         color={cfg.lightColor}
-        distance={6}
-        decay={0.8}
+        distance={5}
+        decay={0.6}
       />
-      {/* spotLight target（画作中心，通过 primitive 加入场景） */}
       <primitive object={targetObj} position={[0, 0, 0]} />
 
       {/* hover 时画作名 */}
       {hovered && (
-        <Html center position={[0, -frameH / 2 - 0.3, 0.1]} distanceFactor={10} occlude={false}>
-          <div className="px-3.5 py-1.5 rounded-full bg-black/80 text-white text-xs whitespace-nowrap backdrop-blur-sm pointer-events-none border border-white/10">
+        <Html center position={[0, -frameH / 2 - 0.25, 0.1]} distanceFactor={10} occlude={false}>
+          <div className="px-3 py-1 rounded-full bg-black/80 text-white text-xs whitespace-nowrap backdrop-blur-sm pointer-events-none border border-white/10">
             {artwork.title}
           </div>
         </Html>
@@ -292,7 +358,7 @@ function ArtworkPlane({
   })
 
   return (
-    <mesh position={[0, 0, 0.008]}>
+    <mesh position={[0, 0, 0.005]}>
       <planeGeometry args={[W, H]} />
       <meshStandardMaterial
         map={texture}
@@ -307,7 +373,7 @@ function ArtworkPlane({
   )
 }
 
-// ============ 灯光（环境光适中，让射灯效果突出） ============
+// ============ 灯光（环境光适中，突出射灯光斑） ============
 function Lights({ style }: { style: Style }) {
   const cfg = STYLE_CONFIG[style]
   return (
@@ -315,20 +381,20 @@ function Lights({ style }: { style: Style }) {
       <ambientLight intensity={cfg.ambient} color={cfg.lightColor} />
       <hemisphereLight args={[cfg.ceiling, cfg.floor, cfg.hemi]} />
       {/* 中央暖光吊灯 */}
-      <pointLight position={[0, WALL_H - 0.5, 0]} intensity={0.25} color={cfg.lightColor} distance={16} decay={2} />
-      <mesh position={[0, WALL_H - 0.35, 0]}>
-        <sphereGeometry args={[0.14, 16, 16]} />
+      <pointLight position={[0, WALL_H - 0.5, 0]} intensity={0.2} color={cfg.lightColor} distance={14} decay={2} />
+      <mesh position={[0, WALL_H - 0.3, 0]}>
+        <sphereGeometry args={[0.12, 16, 16]} />
         <meshStandardMaterial color={cfg.lightColor} emissive={cfg.lightColor} emissiveIntensity={0.7} />
       </mesh>
-      <mesh position={[0, WALL_H - 0.18, 0]}>
-        <cylinderGeometry args={[0.008, 0.008, 0.3, 8]} />
+      <mesh position={[0, WALL_H - 0.15, 0]}>
+        <cylinderGeometry args={[0.006, 0.006, 0.25, 8]} />
         <meshStandardMaterial color="#333" metalness={0.7} roughness={0.3} />
       </mesh>
     </>
   )
 }
 
-// ============ 相机控制（反转滑动方向 + 缩小后的边界） ============
+// ============ 相机控制（反转滑动方向） ============
 function CameraRig({ isMobile }: { isMobile: boolean }) {
   const controlsRef = useRef<any>(null)
   const { camera } = useThree()
@@ -342,7 +408,6 @@ function CameraRig({ isMobile }: { isMobile: boolean }) {
     }
   }, [camera, isMobile])
 
-  // 键盘控制（仅 PC）
   useEffect(() => {
     if (isMobile) return
     const down = (e: KeyboardEvent) => {
@@ -386,7 +451,6 @@ function CameraRig({ isMobile }: { isMobile: boolean }) {
       }
     }
 
-    // 限制相机在缩小的房间内
     camera.position.set(
       THREE.MathUtils.clamp(camera.position.x, -6.4, 6.4),
       1.6,
@@ -397,15 +461,14 @@ function CameraRig({ isMobile }: { isMobile: boolean }) {
   return (
     <OrbitControls
       ref={controlsRef}
-      target={[0, ART_Y, isMobile ? 0 : -1.5]}
+      target={[0, 1.9, isMobile ? 0 : -1.5]}
       enablePan={!isMobile}
       enableZoom={!isMobile}
       enableRotate
       minDistance={isMobile ? 0.01 : 0.5}
       maxDistance={isMobile ? 0.01 : 10}
-      minPolarAngle={0.2}
-      maxPolarAngle={Math.PI - 0.2}
-      // 反转旋转方向：负值让"向右滑→视角向右转"（符合直觉）
+      minPolarAngle={0.25}
+      maxPolarAngle={Math.PI - 0.25}
       rotateSpeed={isMobile ? -0.55 : -0.65}
       zoomSpeed={0.9}
       enableDamping
@@ -457,7 +520,7 @@ export function GalleryScene({
         powerPreference: 'high-performance',
         alpha: false,
       }}
-      camera={{ fov: isMobile ? 75 : 68, near: 0.1, far: 100, position: [0, 1.6, 4] }}
+      camera={{ fov: isMobile ? 75 : 70, near: 0.1, far: 100, position: [0, 1.6, 4] }}
       onPointerMissed={() => {}}
       className="!absolute inset-0"
     >
