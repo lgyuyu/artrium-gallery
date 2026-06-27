@@ -20,7 +20,7 @@ type Style = 'modern' | 'cozy'
 // ============ 房间尺寸 ============
 const ROOM_W = 14     // 宽（x）
 const ROOM_D = 11     // 深（z）
-const WALL_H = 4.2    // 墙高
+const WALL_H = 4.62   // 墙高 (+10%)
 
 // ============ 风格配置（参考视频：明亮简洁，木地板，白框，轨道射灯有光斑） ============
 // ============ 风格配置（参考图：灰色墙+浅灰顶+白地+黑色画框+暖白聚光+墙顶灯带） ============
@@ -280,7 +280,7 @@ function FramedArtwork({
   // 灯在画作上方稍前方，target 对准画作中心 [0,0,0]，光斑自然落在画上
   const lampY = WALL_H - slot.pos[1] - 0.05   // 灯贴天花板
   const lampZ = 0.15                           // 灯在画作前方0.15m（小偏移，让光斜照到画面）
-  const beamAngle = 0.48                       // 聚光角度（原0.4 +20%照射面积）
+  const beamAngle = 0.576                      // 聚光角度（再+20%照射面积）
 
   return (
     <group
