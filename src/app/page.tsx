@@ -1,11 +1,23 @@
 import { db } from '@/lib/db'
 import { StudentCard } from '@/components/home/student-card'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { Settings, ChevronDown, Frame } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ student?: string; share?: string }>
+}) {
+  const params = await searchParams
+  // 分享链接：/?student=xxx&share=1 → 重定向到该学生展厅（带 share 参数隐藏返回按钮）
+  if (params.student) {
+    const shareParam = params.share === '1' ? '?share=1' : ''
+    redirect(`/gallery/${params.student}${shareParam}`)
+  }
+
   const [org, students] = await Promise.all([
     db.organization.findFirst(),
     db.student.findMany({

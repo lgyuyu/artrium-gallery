@@ -67,6 +67,7 @@ export function StudentCard({ id, name, age, bio, coverImage, artworkCount, inde
           <ShareDialog
             studentId={id}
             studentName={name}
+            studentAge={age}
             coverImage={coverImage}
             orgName={orgName}
           />

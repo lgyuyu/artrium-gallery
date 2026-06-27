@@ -533,3 +533,41 @@ Work Log:
 Stage Summary:
 - 墙高+10%(4.62m)，光照面积+20%(beamAngle 0.576)
 - 空间更开阔，光斑更大且对齐
+
+---
+Task ID: 27
+Agent: 主控Agent (Claude)
+Task: 分享文案改版+分享模式隐藏返回按钮
+
+Work Log:
+1. share-dialog.tsx 重写:
+   - 链接格式改为 /?student=xxx&share=1 (首页带参数)
+   - 复制内容改为多行文案: 标题+描述+链接
+     "小明的线上画展\n星玥艺术 · 小明（8岁 · 少儿启蒙班）的个人画展，欢迎观赏\nhttps://xxx/?student=xxx&share=1"
+   - 新增 studentAge 参数(用于描述中的年龄)
+   - 弹窗显示文案预览卡片，点击可复制
+   - 微信提示更新: "对方点开链接直接进入该学生画展，不会看到其他同学作品"
+
+2. gallery-client.tsx:
+   - 新增 isShare 状态，读取 URL share=1 参数
+   - 分享模式下隐藏"返回大厅"按钮(用空div占位保持布局)
+   - ShareDialog 传入 studentAge={student.age}
+
+3. page.tsx (首页):
+   - 新增 searchParams 参数检测
+   - 当 URL 带 student 参数时，redirect 到 /gallery/xxx?share=1
+   - 这样分享链接 /?student=xxx&share=1 会自动跳转到学生展厅
+
+4. student-card.tsx:
+   - ShareDialog 传入 studentAge={age}
+
+验证(Agent Browser):
+- 分享弹窗显示正确文案(标题+描述+链接) ✓
+- 链接格式 ?student=xxx&share=1 ✓
+- 分享链接打开后重定向到 /gallery/xxx?share=1 ✓
+- 分享模式下左上角无"返回大厅"按钮 ✓
+- 只展示当前学生画展，看不到其他同学 ✓
+
+Stage Summary:
+- 分享文案: 多行格式(标题+描述+链接)，链接用 /?student=xxx&share=1
+- 分享模式: 隐藏返回按钮，访客只能看当前学生画展

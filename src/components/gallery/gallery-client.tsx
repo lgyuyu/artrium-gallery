@@ -46,6 +46,17 @@ export function GalleryClient({ student, artworks, orgName, orgLogo }: GalleryCl
   const [showInfo, setShowInfo] = useState(true)
   const [showHint, setShowHint] = useState(true)
   const ready = isMobile !== null
+  // 分享模式：URL 带 share=1 参数时，隐藏返回大厅按钮（防止看到其他同学作品）
+  const [isShare, setIsShare] = useState(false)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      // 客户端读取 URL 参数，标准模式，lint 误报
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setIsShare(params.get('share') === '1')
+    }
+  }, [])
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768)
@@ -79,13 +90,18 @@ export function GalleryClient({ student, artworks, orgName, orgLogo }: GalleryCl
       <header className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
         <div className="bg-gradient-to-b from-black/60 to-transparent">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between pointer-events-auto">
-            <Link
-              href="/"
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-white text-sm hover:bg-white/20 transition-colors"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <span className="hidden sm:inline">返回大厅</span>
-            </Link>
+            {/* 分享模式下不显示返回大厅按钮（防止看到其他同学作品） */}
+            {isShare ? (
+              <div className="w-24" />
+            ) : (
+              <Link
+                href="/"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-white text-sm hover:bg-white/20 transition-colors"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span className="hidden sm:inline">返回大厅</span>
+              </Link>
+            )}
 
             <div className="flex items-center gap-2.5 text-white">
               <div className="h-8 w-8 rounded-md bg-white shadow-sm flex items-center justify-center overflow-hidden shrink-0">
@@ -104,6 +120,7 @@ export function GalleryClient({ student, artworks, orgName, orgLogo }: GalleryCl
             <ShareDialog
               studentId={student.id}
               studentName={student.name}
+              studentAge={student.age}
               coverImage={artworks[0]?.imageUrl}
               orgName={orgName}
               trigger={

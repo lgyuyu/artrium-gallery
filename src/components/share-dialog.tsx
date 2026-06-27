@@ -9,36 +9,47 @@ import { toast } from 'sonner'
 interface ShareDialogProps {
   studentId: string
   studentName: string
+  studentAge?: string | null
   coverImage?: string | null
   orgName?: string
   trigger?: React.ReactNode
 }
 
-export function ShareDialog({ studentId, studentName, coverImage, orgName = '星玥艺术', trigger }: ShareDialogProps) {
+export function ShareDialog({ studentId, studentName, studentAge, coverImage, orgName = '星玥艺术', trigger }: ShareDialogProps) {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/gallery/${studentId}` : ''
+  // 分享链接：首页带 student + share 参数（分享模式下隐藏返回按钮，看不到其他同学）
+  const shareUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/?student=${studentId}&share=1`
+    : ''
+
+  // 年龄描述
+  const ageDesc = studentAge ? `（${studentAge}）` : ''
+  // 复制的完整文案：标题 + 描述 + 链接
+  const shareText = `${studentName}的线上画展\n${orgName} · ${studentName}${ageDesc}的个人画展，欢迎观赏\n${shareUrl}`
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(shareUrl)
+      await navigator.clipboard.writeText(shareText)
       setCopied(true)
-      toast.success('链接已复制到剪贴板')
+      toast.success('分享文案已复制到剪贴板')
       setTimeout(() => setCopied(false), 2000)
     } catch {
       // 降级方案
       const textarea = document.createElement('textarea')
-      textarea.value = shareUrl
+      textarea.value = shareText
+      textarea.style.position = 'fixed'
+      textarea.style.opacity = '0'
       document.body.appendChild(textarea)
       textarea.select()
       try {
         document.execCommand('copy')
         setCopied(true)
-        toast.success('链接已复制')
+        toast.success('分享文案已复制')
         setTimeout(() => setCopied(false), 2000)
       } catch {
-        toast.error('复制失败，请手动选择链接复制')
+        toast.error('复制失败，请手动复制')
       }
       document.body.removeChild(textarea)
     }
@@ -73,25 +84,29 @@ export function ShareDialog({ studentId, studentName, coverImage, orgName = '星
             )}
             <div className="flex-1 min-w-0">
               <p className="font-medium truncate">{studentName}的线上画展</p>
-              <p className="text-xs text-muted-foreground truncate">{orgName} · 学生作品展示</p>
+              <p className="text-xs text-muted-foreground truncate">
+                {orgName} · {studentName}{ageDesc}的个人画展，欢迎观赏
+              </p>
             </div>
           </div>
 
-          {/* 链接 */}
+          {/* 分享文案预览 */}
           <div className="space-y-1.5">
-            <label className="text-xs text-muted-foreground">专属链接</label>
-            <div className="flex items-center gap-2">
-              <input
-                readOnly
-                value={shareUrl}
-                className="flex-1 h-9 px-3 text-sm rounded-md border bg-background truncate"
-                onFocus={(e) => e.target.select()}
-              />
-              <Button size="sm" onClick={handleCopy} className="shrink-0">
-                {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
-                {copied ? '已复制' : '复制'}
-              </Button>
+            <label className="text-xs text-muted-foreground">分享文案（点击复制）</label>
+            <div
+              className="relative p-3 rounded-md border bg-background text-sm whitespace-pre-line cursor-pointer hover:border-gold transition-colors"
+              onClick={handleCopy}
+            >
+              <p className="font-medium">{studentName}的线上画展</p>
+              <p className="text-muted-foreground text-xs mt-0.5">
+                {orgName} · {studentName}{ageDesc}的个人画展，欢迎观赏
+              </p>
+              <p className="text-xs mt-1.5 text-gold break-all">{shareUrl}</p>
             </div>
+            <Button size="sm" onClick={handleCopy} className="w-full mt-2">
+              {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+              {copied ? '已复制' : '复制分享文案'}
+            </Button>
           </div>
 
           {/* 微信提示 */}
@@ -100,7 +115,7 @@ export function ShareDialog({ studentId, studentName, coverImage, orgName = '星
               <MessageCircle className="h-3.5 w-3.5" />
               微信分享小贴士
             </p>
-            <p>在微信中打开本页面后，点击右上角「···」→「发送给朋友」或「分享到朋友圈」，即可一键分享给家人。</p>
+            <p>复制文案后，粘贴到微信聊天框发送给家人朋友即可。对方点开链接直接进入该学生的画展，不会看到其他同学的作品。</p>
           </div>
         </div>
       </DialogContent>
