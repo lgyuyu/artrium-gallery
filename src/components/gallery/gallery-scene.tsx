@@ -39,30 +39,30 @@ const STYLE_CONFIG: Record<Style, {
   beamOpacity: number
 }> = {
   modern: {
-    wall: '#b8b8b8',        // 中灰墙面
-    ceiling: '#e0e0e0',     // 浅灰天花板
-    floor: '#f0f0f0',       // 白色地面
-    floorStripe: '#d8d8d8',
+    wall: '#d0d0d0',        // 中灰墙面 +20%亮度
+    ceiling: '#e8e8e8',     // 浅灰天花板 +20%
+    floor: '#f8f8f8',       // 白色地面 +20%
+    floorStripe: '#e0e0e0',
     frame: '#1a1a1a',       // 黑色画框
     frameAccent: '#888888',
     lightColor: '#fff5e0',  // 暖白射灯光
     ledColor: '#ffffff',    // 纯白灯带
-    ambient: 0.45,
-    hemi: 0.4,
+    ambient: 0.54,          // +20% (0.45→0.54)
+    hemi: 0.48,             // +20% (0.4→0.48)
     spot: 14,
     beamOpacity: 0.18,
   },
   cozy: {
-    wall: '#b8b8b8',
-    ceiling: '#e0e0e0',
-    floor: '#f0f0f0',
-    floorStripe: '#d8d8d8',
+    wall: '#d0d0d0',        // +20%
+    ceiling: '#e8e8e8',     // +20%
+    floor: '#f8f8f8',       // +20%
+    floorStripe: '#e0e0e0',
     frame: '#1a1a1a',
     frameAccent: '#888888',
     lightColor: '#fff0d8',  // cozy 略暖
     ledColor: '#fff5e8',
-    ambient: 0.5,
-    hemi: 0.45,
+    ambient: 0.6,           // +20% (0.5→0.6)
+    hemi: 0.54,             // +20% (0.45→0.54)
     spot: 13,
     beamOpacity: 0.18,
   },
@@ -91,13 +91,13 @@ const WALL_SLOTS: Array<{ pos: [number, number, number]; rot: [number, number, n
   { pos: [-6.92, ART_Y, -2.5], rot: [0, Math.PI / 2, 0] },
 ]
 
-// ============ 白色地面（简洁哑光） ============
+// ============ 白色地面（简洁哑光，带轻微自发光） ============
 function Floor({ style }: { style: Style }) {
   const cfg = STYLE_CONFIG[style]
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow>
       <planeGeometry args={[ROOM_W, ROOM_D]} />
-      <meshStandardMaterial color={cfg.floor} roughness={0.6} metalness={0.05} />
+      <meshStandardMaterial color={cfg.floor} roughness={0.6} metalness={0.05} emissive={cfg.floor} emissiveIntensity={0.2} />
     </mesh>
   )
 }
@@ -118,22 +118,22 @@ function Room({ style }: { style: Style }) {
         <meshStandardMaterial color={cfg.ceiling} roughness={0.95} emissive={cfg.ceiling} emissiveIntensity={0.15} />
       </mesh>
 
-      {/* 四面墙（中灰，无自发光，保持灰色质感） */}
+      {/* 四面墙（中灰，带轻微自发光提升亮度） */}
       <mesh position={[0, WALL_H / 2, -halfD]} receiveShadow>
         <planeGeometry args={[ROOM_W, WALL_H]} />
-        <meshStandardMaterial color={cfg.wall} roughness={0.95} />
+        <meshStandardMaterial color={cfg.wall} roughness={0.95} emissive={cfg.wall} emissiveIntensity={0.2} />
       </mesh>
       <mesh position={[0, WALL_H / 2, halfD]} rotation={[0, Math.PI, 0]} receiveShadow>
         <planeGeometry args={[ROOM_W, WALL_H]} />
-        <meshStandardMaterial color={cfg.wall} roughness={0.95} />
+        <meshStandardMaterial color={cfg.wall} roughness={0.95} emissive={cfg.wall} emissiveIntensity={0.2} />
       </mesh>
       <mesh position={[-halfW, WALL_H / 2, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
         <planeGeometry args={[ROOM_D, WALL_H]} />
-        <meshStandardMaterial color={cfg.wall} roughness={0.95} />
+        <meshStandardMaterial color={cfg.wall} roughness={0.95} emissive={cfg.wall} emissiveIntensity={0.2} />
       </mesh>
       <mesh position={[halfW, WALL_H / 2, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
         <planeGeometry args={[ROOM_D, WALL_H]} />
-        <meshStandardMaterial color={cfg.wall} roughness={0.95} />
+        <meshStandardMaterial color={cfg.wall} roughness={0.95} emissive={cfg.wall} emissiveIntensity={0.2} />
       </mesh>
 
       {/* ===== 墙顶灯带（4条，沿墙顶交界处，发光线条分隔墙和顶）===== */}
