@@ -313,3 +313,54 @@ Work Log:
 Stage Summary:
 - 展厅调整为: 单排画作 + 垂直射灯 + 中央茶几 + 提亮30%
 - 设计简洁温馨，符合画展氛围
+
+---
+Task ID: 19
+Agent: 主控Agent (Claude)
+Task: 射灯效果优化+墙面顶部纯白+亮度+20%
+
+Work Log:
+1. 分析参考图 pasted_image_1782583675263.png:
+   - 射灯: 嵌入式小筒灯, 纯白光束清晰可见垂直向下, 光斑精准覆盖画作
+   - 墙面天花板: 浅色(用户要求纯白)
+   - 整体明亮聚焦
+
+2. 墙面天花板改纯白:
+   - modern: wall/ceiling #f5f1e8→#ffffff, lightColor #fff8ec→#ffffff
+   - cozy: wall/ceiling #e8d8be→#ffffff
+   - 墙面材质加 emissive={wall} emissiveIntensity=0.3 自发光确保不灰暗
+   - 天花板加 emissive={ceiling} emissiveIntensity=0.35
+
+3. 射灯改嵌入式筒灯:
+   - 移除长连接杆和倾斜灯头
+   - 改为嵌入式: 黑色外圈环+黑色内圈+发光灯泡(小而亮, emissiveIntensity=3)
+   - 灯贴近天花板 lampY = WALL_H - pos.y - 0.25
+   - 移除天花板黑色轨道横杆(更干净)
+
+4. 光束更清晰锐利(参考图风格):
+   - opacity 0.13→0.28 (更明显)
+   - penumbra 0.4→0.25 (光斑边缘更锐利)
+   - beamAngle 0.28→0.26 (更聚焦)
+   - decay 0.6→0.5 (光传得更远)
+
+5. 亮度+20%:
+   - modern: ambient 0.65→0.78, hemi 0.59→0.71, spot 13→15.6
+   - cozy: ambient 0.72→0.86, hemi 0.65→0.78, spot 12→14.4
+
+6. 渲染管线优化:
+   - gl.toneMapping = THREE.NoToneMapping (禁用色调映射, 白色不被压暗)
+   - fog 起始距离 10→18, 终止 24→35 (减弱雾化对墙面的灰化)
+
+验证(Agent Browser + VLM):
+- 嵌入式筒灯样式 ✓
+- 光束清晰垂直向下 ✓
+- 光斑锐利打在画作 ✓
+- 墙面纯白 ✓ (VLM确认"图2比图1更白更亮")
+- 光线明亮 ✓
+- 与参考图相似度 7/10
+
+Stage Summary:
+- 射灯: 嵌入式筒灯+锐利光束
+- 墙面天花板: 纯白+自发光
+- 亮度: 在原基础上再+20%
+- NoToneMapping确保白色纯净

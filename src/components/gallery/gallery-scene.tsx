@@ -38,31 +38,31 @@ const STYLE_CONFIG: Record<Style, {
   trackColor: string    // 轨道色
 }> = {
   modern: {
-    wall: '#f5f1e8',       // 暖米白
-    wallTop: '#f5f1e8',
+    wall: '#ffffff',       // 纯白墙面
+    wallTop: '#ffffff',
     floor: '#c9b083',      // 浅木色
     floorStripe: '#a8916a',// 木纹深色
-    ceiling: '#fcfaf5',
+    ceiling: '#ffffff',    // 纯白天花板
     frame: '#ffffff',      // 白色细框
     frameAccent: '#d4b87a',
-    lightColor: '#fff8ec',
-    ambient: 0.65,         // +30%
-    hemi: 0.59,            // +30%
-    spot: 13,              // +30%
+    lightColor: '#ffffff', // 纯白光
+    ambient: 0.78,         // +20% (0.65→0.78)
+    hemi: 0.71,            // +20% (0.59→0.71)
+    spot: 15.6,            // +20% (13→15.6)
     trackColor: '#2a2a2a',
   },
   cozy: {
-    wall: '#e8d8be',
-    wallTop: '#e8d8be',
+    wall: '#ffffff',       // 纯白墙面
+    wallTop: '#ffffff',
     floor: '#9a7548',
     floorStripe: '#7a5a32',
-    ceiling: '#f3e8d2',
+    ceiling: '#ffffff',    // 纯白天花板
     frame: '#5a3a1f',      // cozy 用深色框
     frameAccent: '#d4a560',
-    lightColor: '#ffe8c0',
-    ambient: 0.72,         // +30%
-    hemi: 0.65,            // +30%
-    spot: 12,              // +30%
+    lightColor: '#fff5e8', // cozy 略暖白
+    ambient: 0.86,         // +20% (0.72→0.86)
+    hemi: 0.78,            // +20% (0.65→0.78)
+    spot: 14.4,            // +20% (12→14.4)
     trackColor: '#2a2a2a',
   },
 }
@@ -159,34 +159,28 @@ function Room({ style }: { style: Style }) {
       {/* 天花板 */}
       <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, WALL_H, 0]} receiveShadow>
         <planeGeometry args={[ROOM_W, ROOM_D]} />
-        <meshStandardMaterial color={cfg.ceiling} roughness={0.95} />
+        <meshStandardMaterial color={cfg.ceiling} roughness={0.95} emissive={cfg.ceiling} emissiveIntensity={0.35} />
       </mesh>
 
-      {/* 四面墙（单色，简洁） */}
+      {/* 四面墙（纯白，带轻微自发光确保不灰暗） */}
       <mesh position={[0, WALL_H / 2, -halfD]} receiveShadow>
         <planeGeometry args={[ROOM_W, WALL_H]} />
-        <meshStandardMaterial color={cfg.wall} roughness={0.95} />
+        <meshStandardMaterial color={cfg.wall} roughness={0.95} emissive={cfg.wall} emissiveIntensity={0.3} />
       </mesh>
       <mesh position={[0, WALL_H / 2, halfD]} rotation={[0, Math.PI, 0]} receiveShadow>
         <planeGeometry args={[ROOM_W, WALL_H]} />
-        <meshStandardMaterial color={cfg.wall} roughness={0.95} />
+        <meshStandardMaterial color={cfg.wall} roughness={0.95} emissive={cfg.wall} emissiveIntensity={0.3} />
       </mesh>
       <mesh position={[-halfW, WALL_H / 2, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
         <planeGeometry args={[ROOM_D, WALL_H]} />
-        <meshStandardMaterial color={cfg.wall} roughness={0.95} />
+        <meshStandardMaterial color={cfg.wall} roughness={0.95} emissive={cfg.wall} emissiveIntensity={0.3} />
       </mesh>
       <mesh position={[halfW, WALL_H / 2, 0]} rotation={[0, -Math.PI / 2, 0]} receiveShadow>
         <planeGeometry args={[ROOM_D, WALL_H]} />
-        <meshStandardMaterial color={cfg.wall} roughness={0.95} />
+        <meshStandardMaterial color={cfg.wall} roughness={0.95} emissive={cfg.wall} emissiveIntensity={0.3} />
       </mesh>
 
-      {/* 天花板轨道射灯（黑色长条，沿x方向，两条） */}
-      {[-3, 3].map((z) => (
-        <mesh key={`track-${z}`} position={[0, WALL_H - 0.12, z]}>
-          <boxGeometry args={[ROOM_W - 0.5, 0.06, 0.1]} />
-          <meshStandardMaterial color={cfg.trackColor} metalness={0.7} roughness={0.3} />
-        </mesh>
-      ))}
+      {/* 天花板（纯白，干净，无轨道） */}
 
       {/* 中央茶几 */}
       <TeaTable style={style} />
@@ -283,11 +277,11 @@ function FramedArtwork({
   const frameThickness = style === 'modern' ? 0.04 : 0.06
   const frameW = W + frameThickness * 2
   const frameH = H + frameThickness * 2
-  // 射灯：从天花板垂直向下照画作，灯在画作正上方前方0.3m
-  const lampY = WALL_H - slot.pos[1] - 0.5   // 灯距天花板0.5m（垂直向下）
-  const lampZ = 0.3                           // 灯在画作前方0.3m（让光斑落在画上）
-  const beamLen = lampY                       // 垂直光束长度
-  const beamAngle = 0.28
+  // 射灯：嵌入式小筒灯，从天花板垂直向下照画作
+  const lampY = WALL_H - slot.pos[1] - 0.25   // 灯贴近天花板（嵌入式）
+  const lampZ = 0.35                           // 灯在画作前方0.35m（让光斑落在画上）
+  const beamLen = lampY                        // 垂直光束长度
+  const beamAngle = 0.26                       // 聚焦角度
   const beamR = beamLen * Math.tan(beamAngle)
 
   return (
@@ -324,54 +318,49 @@ function FramedArtwork({
         <ArtworkPlane url={artwork.imageUrl} W={W} H={H} hovered={hovered} />
       </Suspense>
 
-      {/* ===== 射灯（从天花板垂直向下照画作）===== */}
-      {/* 短连接杆 */}
-      <mesh position={[0, lampY + 0.2, lampZ]}>
-        <cylinderGeometry args={[0.012, 0.012, 0.4, 8]} />
-        <meshStandardMaterial color="#2a2a2a" metalness={0.6} roughness={0.4} />
+      {/* ===== 嵌入式筒灯（从天花板垂直向下照画作）===== */}
+      {/* 筒灯外圈（嵌入天花板的黑色环） */}
+      <mesh position={[0, lampY + 0.05, lampZ]}>
+        <cylinderGeometry args={[0.1, 0.1, 0.08, 20]} />
+        <meshStandardMaterial color="#1a1a1a" metalness={0.8} roughness={0.25} />
       </mesh>
-      {/* 灯头（圆柱，垂直朝下） */}
-      <mesh position={[0, lampY, lampZ]}>
-        <cylinderGeometry args={[0.07, 0.09, 0.18, 16]} />
-        <meshStandardMaterial color="#1a1a1a" metalness={0.85} roughness={0.2} />
+      {/* 筒灯内圈（黑色） */}
+      <mesh position={[0, lampY + 0.02, lampZ]}>
+        <cylinderGeometry args={[0.085, 0.085, 0.06, 20]} />
+        <meshStandardMaterial color="#0a0a0a" metalness={0.6} roughness={0.4} />
       </mesh>
-      {/* 灯口金色环 */}
-      <mesh position={[0, lampY - 0.1, lampZ]}>
-        <cylinderGeometry args={[0.095, 0.095, 0.035, 16]} />
-        <meshStandardMaterial color={cfg.frameAccent} metalness={0.8} roughness={0.2} emissive={cfg.lightColor} emissiveIntensity={0.8} />
-      </mesh>
-      {/* 灯泡发光球 */}
-      <mesh position={[0, lampY - 0.08, lampZ]}>
-        <sphereGeometry args={[0.06, 16, 16]} />
-        <meshStandardMaterial color={cfg.lightColor} emissive={cfg.lightColor} emissiveIntensity={1.8} />
+      {/* 灯泡发光球（小而亮） */}
+      <mesh position={[0, lampY - 0.01, lampZ]}>
+        <sphereGeometry args={[0.055, 16, 16]} />
+        <meshStandardMaterial color={cfg.lightColor} emissive={cfg.lightColor} emissiveIntensity={3} />
       </mesh>
 
-      {/* 可见光束（垂直向下的半透明圆锥，从灯到画作） */}
-      <mesh position={[0, lampY / 2, lampZ]}>
-        <coneGeometry args={[beamR, beamLen, 20, 1, true]} />
+      {/* 可见光束（垂直向下的圆锥，锐利清晰） */}
+      <mesh position={[0, lampY / 2 - 0.05, lampZ]}>
+        <coneGeometry args={[beamR, beamLen - 0.1, 24, 1, true]} />
         <meshBasicMaterial
           color={cfg.lightColor}
           transparent
-          opacity={0.13}
+          opacity={0.28}
           side={THREE.DoubleSide}
           depthWrite={false}
           blending={THREE.AdditiveBlending}
         />
       </mesh>
 
-      {/* 聚光灯光源（从灯泡位置垂直向下照） */}
+      {/* 聚光灯光源（从灯泡位置垂直向下照，锐利光斑） */}
       <spotLight
         ref={spotRef}
-        position={[0, lampY - 0.1, lampZ]}
+        position={[0, lampY - 0.05, lampZ]}
         angle={beamAngle}
-        penumbra={0.4}
+        penumbra={0.25}
         intensity={cfg.spot}
         color={cfg.lightColor}
-        distance={6}
-        decay={0.6}
+        distance={7}
+        decay={0.5}
       />
-      {/* spotLight target 在画作中心稍下方（让光斑落在画上） */}
-      <primitive object={targetObj} position={[0, -0.2, 0]} />
+      {/* spotLight target 在画作中心 */}
+      <primitive object={targetObj} position={[0, 0, 0]} />
 
       {/* hover 时画作名 */}
       {hovered && (
@@ -565,13 +554,14 @@ export function GalleryScene({
         antialias: !isMobile,
         powerPreference: 'high-performance',
         alpha: false,
+        toneMapping: THREE.NoToneMapping,
       }}
       camera={{ fov: isMobile ? 75 : 70, near: 0.1, far: 100, position: [0, 1.6, 4] }}
       onPointerMissed={() => {}}
       className="!absolute inset-0"
     >
       <color attach="background" args={[STYLE_CONFIG[style].ceiling]} />
-      <fog attach="fog" args={[STYLE_CONFIG[style].ceiling, 10, 24]} />
+      <fog attach="fog" args={[STYLE_CONFIG[style].ceiling, 18, 35]} />
 
       <Suspense fallback={<SceneLoader />}>
         <Lights style={style} />
