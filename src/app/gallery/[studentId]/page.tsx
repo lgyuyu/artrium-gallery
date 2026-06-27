@@ -19,10 +19,10 @@ export async function generateMetadata({
     },
   })
   if (!student) {
-    return { title: '展厅不存在 · 艺境美术' }
+    return { title: '展厅不存在 · 星玥艺术' }
   }
   const org = await db.organization.findFirst()
-  const orgName = org?.name ?? '艺境美术 ARTRIUM'
+  const orgName = org?.name ?? '星玥艺术'
   const coverImage = student.artworks[0]?.imageUrl
 
   return {
@@ -82,8 +82,8 @@ export default async function GalleryPage({
         style: student.style,
       }}
       artworks={artworks}
-      orgName={org?.name ?? '艺境美术 ARTRIUM'}
-      orgLogo={org?.logo ?? '/logo-artium.png'}
+      orgName={org?.name ?? '星玥艺术'}
+      orgLogo={org?.logo ?? '/logo-xingyue.png'}
     />
   )
 }

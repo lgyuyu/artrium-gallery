@@ -10,10 +10,11 @@ interface ShareDialogProps {
   studentId: string
   studentName: string
   coverImage?: string | null
+  orgName?: string
   trigger?: React.ReactNode
 }
 
-export function ShareDialog({ studentId, studentName, coverImage, trigger }: ShareDialogProps) {
+export function ShareDialog({ studentId, studentName, coverImage, orgName = '星玥艺术', trigger }: ShareDialogProps) {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -72,7 +73,7 @@ export function ShareDialog({ studentId, studentName, coverImage, trigger }: Sha
             )}
             <div className="flex-1 min-w-0">
               <p className="font-medium truncate">{studentName}的线上画展</p>
-              <p className="text-xs text-muted-foreground truncate">艺境美术 ARTRIUM · 学生作品展示</p>
+              <p className="text-xs text-muted-foreground truncate">{orgName} · 学生作品展示</p>
             </div>
           </div>
 

@@ -150,3 +150,58 @@ Stage Summary:
 - 响应式: 桌面/手机均正常
 - 微信分享: Meta已配置，分享弹窗含复制链接+微信提示
 - 项目可交付
+
+---
+Task ID: 10-15
+Agent: 主控Agent (Claude)
+Task: 5项优化（3D展厅+射灯+批量上传+品牌名+logo）
+
+Work Log:
+优化1 - 3D展厅重构:
+- 房间加大: 12x10 → 18x14, 墙高 4 → 4.5
+- 画作加大: 1.3x1.65 → 1.6x2.0，14个墙位槽位
+- 360°转动: minPolarAngle 0.15, maxPolarAngle π-0.15，水平不限
+- 光线提亮: ambient 0.45→0.85, hemi 0.4→0.6, spotIntensity 2.2→4.5
+- 设计感: 墙面上下分色(护墙板)+3道金色腰线+地面边框+天花板灯轨+中央吊灯
+
+优化2 - 专有射灯:
+- 每幅画独立射灯灯具(连接杆+黑色灯头+金色发光环+发光灯泡)
+- 加大尺寸(灯头0.11→0.14半径)让远处可见
+- spotLight 用 useRef 管理 target，光从天花板照向画作中心
+- VLM 确认: 射灯可见，光线集中照亮画作
+
+优化3 - 批量上传:
+- UploadDialog 重写: 支持多文件选择(multiple)
+- 每文件独立名称输入框 + 缩略图 + 大小显示 + 删除按钮
+- 共用字段: 创作时间、描述
+- 逐个上传 + 实时进度(上传中/已完成/失败状态)
+- "继续添加图片"按钮支持追加
+- VLM 确认: 体验良好，按钮显示"上传N幅"
+
+优化4 - 机构名"星玥艺术":
+- 数据库 organization.name 更新为"星玥艺术"
+- 全局替换"艺境美术 ARTRIUM"→"星玥艺术"
+- 导航栏品牌名: text-lg → text-2xl font-semibold
+- Hero区: 机构名作为主标题 text-8xl + 金色，"学生线上画展"作副标题
+- layout/admin/gallery metadata 全部更新
+
+优化5 - 新logo醒目:
+- 用户上传 logo-xingyue.png (暖金色星玥艺术logo)
+- 导航栏: logo放白色圆角卡片 h-14，更醒目
+- Hero区: 24x24 大 logo 居中展示
+- 页脚/admin-login/3D展厅顶栏 全部更新 logo 展示
+- favicon 更新为 logo-xingyue.png
+
+验证:
+- lint 0 errors 0 warnings
+- Agent Browser 复测:
+  · 首页: "星玥艺术"大字+醒目暖金logo ✓
+  · 3D展厅: 房间宽敞+光线明亮+画作清晰+射灯可见 ✓
+  · 360°转动: 视角成功转动 ✓
+  · 批量上传: 多文件+单独命名+共用字段 ✓
+
+Stage Summary:
+- 5项优化全部完成并验证
+- 3D展厅体验大幅提升(空间感+光线+设计感+射灯)
+- 批量上传提升管理效率
+- 品牌升级为"星玥艺术"+新logo

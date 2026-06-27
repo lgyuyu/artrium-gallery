@@ -29,20 +29,22 @@ export default async function HomePage() {
   }))
 
   const totalArtworks = studentList.reduce((sum, s) => sum + s.artworkCount, 0)
-  const orgName = org?.name ?? '艺境美术 ARTRIUM'
+  const orgName = org?.name ?? '星玥艺术'
   const orgSlogan = org?.slogan ?? '让每个孩子都拥有属于自己的画展'
-  const orgLogo = org?.logo ?? '/logo-artium.png'
+  const orgLogo = org?.logo ?? '/logo-xingyue.png'
 
   return (
     <main className="min-h-screen flex flex-col bg-background">
       {/* 顶部导航 */}
       <header className="sticky top-0 z-40 backdrop-blur-md bg-background/75 border-b border-border/40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <img src={orgLogo} alt={orgName} className="h-9 w-9 rounded object-contain" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="h-14 w-14 rounded-lg bg-white shadow-sm border border-border/40 flex items-center justify-center overflow-hidden shrink-0">
+              <img src={orgLogo} alt={`${orgName} logo`} className="h-12 w-12 object-contain" />
+            </div>
             <div className="leading-tight">
-              <p className="font-serif text-lg font-medium tracking-wide">{orgName}</p>
-              <p className="text-[10px] text-muted-foreground tracking-[0.2em] uppercase">Online Gallery</p>
+              <p className="font-serif text-2xl font-semibold tracking-wide">{orgName}</p>
+              <p className="text-[10px] text-muted-foreground tracking-[0.25em] uppercase mt-0.5">Online Gallery</p>
             </div>
           </Link>
           <Link
@@ -64,22 +66,29 @@ export default async function HomePage() {
         </div>
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 sm:py-24 text-center">
+          {/* Logo 醒目展示 */}
+          <div className="flex justify-center mb-8 animate-fade-in">
+            <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-2xl bg-white shadow-lg border border-border/40 flex items-center justify-center overflow-hidden">
+              <img src={orgLogo} alt={`${orgName} logo`} className="h-20 w-20 sm:h-24 sm:w-24 object-contain" />
+            </div>
+          </div>
+
           {/* 顶部装饰线 */}
-          <div className="flex items-center justify-center gap-3 mb-6 animate-fade-in">
+          <div className="flex items-center justify-center gap-3 mb-5 animate-fade-in" style={{ animationDelay: '80ms' }}>
             <span className="h-px w-12 bg-gold/60" />
             <Frame className="h-4 w-4 text-gold" />
             <span className="h-px w-12 bg-gold/60" />
           </div>
 
-          <p className="text-xs sm:text-sm tracking-[0.35em] uppercase text-gold font-medium mb-4 animate-fade-in" style={{ animationDelay: '100ms' }}>
-            ARTRIUM · 艺境美术
-          </p>
-
-          <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl font-medium leading-tight animate-fade-in" style={{ animationDelay: '200ms' }}>
-            学生线上画展
+          <h1 className="font-serif text-5xl sm:text-7xl md:text-8xl font-semibold leading-tight animate-fade-in" style={{ animationDelay: '150ms' }}>
+            <span className="text-gold">{orgName}</span>
           </h1>
 
-          <p className="mt-6 text-base sm:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed animate-fade-in" style={{ animationDelay: '300ms' }}>
+          <p className="mt-4 text-base sm:text-lg text-muted-foreground tracking-[0.3em] uppercase animate-fade-in" style={{ animationDelay: '250ms' }}>
+            学生线上画展
+          </p>
+
+          <p className="mt-6 text-sm sm:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed animate-fade-in" style={{ animationDelay: '350ms' }}>
             {orgSlogan}
           </p>
 
@@ -122,7 +131,7 @@ export default async function HomePage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6">
             {studentList.map((s, i) => (
-              <StudentCard key={s.id} {...s} index={i} />
+              <StudentCard key={s.id} {...s} index={i} orgName={orgName} />
             ))}
           </div>
         )}
@@ -132,11 +141,13 @@ export default async function HomePage() {
       <footer className="mt-auto border-t border-border/60 bg-card/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2.5">
-              <img src={orgLogo} alt={orgName} className="h-7 w-7 rounded object-contain" />
+            <div className="flex items-center gap-3">
+              <div className="h-11 w-11 rounded-lg bg-white shadow-sm border border-border/40 flex items-center justify-center overflow-hidden shrink-0">
+                <img src={orgLogo} alt={`${orgName} logo`} className="h-9 w-9 object-contain" />
+              </div>
               <div className="text-sm">
-                <span className="font-serif font-medium">{orgName}</span>
-                <span className="text-muted-foreground ml-2">· {orgSlogan}</span>
+                <span className="font-serif text-lg font-semibold">{orgName}</span>
+                <span className="text-muted-foreground ml-2 hidden sm:inline">· {orgSlogan}</span>
               </div>
             </div>
             <div className="flex items-center gap-4 text-xs text-muted-foreground">

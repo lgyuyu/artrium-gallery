@@ -12,9 +12,10 @@ interface StudentCardProps {
   coverImage: string | null
   artworkCount: number
   index?: number
+  orgName?: string
 }
 
-export function StudentCard({ id, name, age, bio, coverImage, artworkCount, index = 0 }: StudentCardProps) {
+export function StudentCard({ id, name, age, bio, coverImage, artworkCount, index = 0, orgName }: StudentCardProps) {
   return (
     <div
       className="group relative bg-card rounded-xl overflow-hidden frame-shadow transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl animate-fade-in"
@@ -67,6 +68,7 @@ export function StudentCard({ id, name, age, bio, coverImage, artworkCount, inde
             studentId={id}
             studentName={name}
             coverImage={coverImage}
+            orgName={orgName}
           />
         </div>
 

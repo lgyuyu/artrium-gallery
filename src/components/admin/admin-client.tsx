@@ -40,11 +40,13 @@ export function AdminClient({ orgName, orgLogo }: { orgName: string; orgLogo: st
       <header className="sticky top-0 z-30 backdrop-blur-md bg-background/85 border-b">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <img src={orgLogo} alt={`${orgName} logo`} className="h-9 w-9 rounded object-contain" />
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="h-12 w-12 rounded-lg bg-white shadow-sm border border-border/40 flex items-center justify-center overflow-hidden shrink-0">
+                <img src={orgLogo} alt={`${orgName} logo`} className="h-10 w-10 object-contain" />
+              </div>
               <div className="leading-tight">
-                <p className="font-serif text-lg font-medium tracking-wide">{orgName}</p>
-                <p className="text-[10px] text-muted-foreground tracking-[0.2em] uppercase">Admin Console</p>
+                <p className="font-serif text-xl font-semibold tracking-wide">{orgName}</p>
+                <p className="text-[10px] text-muted-foreground tracking-[0.25em] uppercase mt-0.5">Admin Console</p>
               </div>
             </Link>
           </div>

@@ -9,20 +9,20 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "艺境美术 ARTRIUM · 学生线上画展",
-  description: "艺境美术 ARTRIUM — 让每个孩子都拥有属于自己的画展。360° VR 沉浸式线上展厅。",
-  keywords: ["艺境美术", "ARTRIUM", "画展", "VR展厅", "线上画展", "儿童美术", "学生作品"],
-  authors: [{ name: "艺境美术 ARTRIUM" }],
+  title: "星玥艺术 · 学生线上画展",
+  description: "星玥艺术 — 让每个孩子都拥有属于自己的画展。360° VR 沉浸式线上展厅。",
+  keywords: ["星玥艺术", "画展", "VR展厅", "线上画展", "儿童美术", "学生作品"],
+  authors: [{ name: "星玥艺术" }],
   icons: {
-    icon: "/logo-artium.png",
-    apple: "/logo-artium.png",
+    icon: "/logo-xingyue.png",
+    apple: "/logo-xingyue.png",
   },
   openGraph: {
-    title: "艺境美术 ARTRIUM · 学生线上画展",
+    title: "星玥艺术 · 学生线上画展",
     description: "让每个孩子都拥有属于自己的画展 — 360° VR 沉浸式线上展厅",
-    siteName: "艺境美术 ARTRIUM",
+    siteName: "星玥艺术",
     type: "website",
-    images: ["/logo-artium.png"],
+    images: ["/logo-xingyue.png"],
   },
 };
 

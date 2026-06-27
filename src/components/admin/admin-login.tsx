@@ -45,11 +45,13 @@ export function AdminLogin({ orgLogo, orgName }: { orgLogo: string; orgName: str
   return (
     <main className="min-h-screen flex flex-col items-center justify-center px-4 bg-gradient-to-b from-background to-accent/30">
       <div className="w-full max-w-sm">
-        <Link href="/" className="flex items-center justify-center gap-2.5 mb-8 text-muted-foreground hover:text-foreground transition-colors">
-          <img src={orgLogo} alt={orgName} className="h-9 w-9 rounded object-contain" />
-          <div className="leading-tight text-center">
-            <p className="font-serif text-lg font-medium text-foreground">{orgName}</p>
-            <p className="text-[10px] tracking-[0.2em] uppercase">Online Gallery</p>
+        <Link href="/" className="flex items-center justify-center gap-3 mb-8 text-muted-foreground hover:text-foreground transition-colors">
+          <div className="h-16 w-16 rounded-xl bg-white shadow-md border border-border/40 flex items-center justify-center overflow-hidden">
+            <img src={orgLogo} alt={`${orgName} logo`} className="h-14 w-14 object-contain" />
+          </div>
+          <div className="leading-tight text-left">
+            <p className="font-serif text-2xl font-semibold text-foreground">{orgName}</p>
+            <p className="text-[10px] tracking-[0.25em] uppercase mt-0.5">Online Gallery</p>
           </div>
         </Link>
 

@@ -77,7 +77,7 @@ export function GalleryClient({ student, artworks, orgName, orgLogo }: GalleryCl
 
       {/* 顶部 header */}
       <header className="absolute top-0 left-0 right-0 z-20 pointer-events-none">
-        <div className="bg-gradient-to-b from-black/50 to-transparent">
+        <div className="bg-gradient-to-b from-black/60 to-transparent">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between pointer-events-auto">
             <Link
               href="/"
@@ -87,19 +87,25 @@ export function GalleryClient({ student, artworks, orgName, orgLogo }: GalleryCl
               <span className="hidden sm:inline">返回大厅</span>
             </Link>
 
-            <div className="text-center text-white">
-              <h1 className="font-serif text-lg sm:text-xl font-medium leading-tight">
-                {student.name}的画展
-              </h1>
-              <p className="text-[10px] sm:text-xs text-white/60 tracking-wider">
-                {orgName} · {style === 'modern' ? '现代简约画廊' : '温馨家居展厅'}
-              </p>
+            <div className="flex items-center gap-2.5 text-white">
+              <div className="h-8 w-8 rounded-md bg-white shadow-sm flex items-center justify-center overflow-hidden shrink-0">
+                <img src={orgLogo} alt={`${orgName} logo`} className="h-7 w-7 object-contain" />
+              </div>
+              <div className="text-center leading-tight">
+                <h1 className="font-serif text-base sm:text-lg font-semibold">
+                  {student.name}的画展
+                </h1>
+                <p className="text-[10px] text-white/60 tracking-wider">
+                  {orgName} · {style === 'modern' ? '现代简约画廊' : '温馨家居展厅'}
+                </p>
+              </div>
             </div>
 
             <ShareDialog
               studentId={student.id}
               studentName={student.name}
               coverImage={artworks[0]?.imageUrl}
+              orgName={orgName}
               trigger={
                 <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-white text-sm hover:bg-white/20 transition-colors">
                   <Share2 className="h-4 w-4" />

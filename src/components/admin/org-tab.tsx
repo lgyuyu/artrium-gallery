@@ -98,7 +98,7 @@ export function OrgTab() {
 
         <div className="space-y-1.5">
           <Label htmlFor="oname">机构名称 *</Label>
-          <Input id="oname" value={name} onChange={(e) => setName(e.target.value)} placeholder="如：艺境美术 ARTRIUM" />
+          <Input id="oname" value={name} onChange={(e) => setName(e.target.value)} placeholder="如：星玥艺术" />
         </div>
 
         <div className="space-y-1.5">
@@ -108,7 +108,7 @@ export function OrgTab() {
 
         <div className="space-y-1.5">
           <Label htmlFor="ologo">Logo 路径</Label>
-          <Input id="ologo" value={logo} onChange={(e) => setLogo(e.target.value)} placeholder="/logo-artium.png" />
+          <Input id="ologo" value={logo} onChange={(e) => setLogo(e.target.value)} placeholder="/logo-xingyue.png" />
           {logo && (
             <div className="flex items-center gap-2 mt-1.5">
               <img src={logo} alt="logo预览" className="h-10 w-10 rounded object-contain border" />
