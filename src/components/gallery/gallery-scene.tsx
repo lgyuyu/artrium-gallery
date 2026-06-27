@@ -406,11 +406,8 @@ function CameraRig({ isMobile }: { isMobile: boolean }) {
   const keys = useRef<Record<string, boolean>>({})
 
   useEffect(() => {
-    if (isMobile) {
-      camera.position.set(0, 1.6, 0.5)
-    } else {
-      camera.position.set(0, 1.6, 4)
-    }
+    // 移动端与 PC 端同步：站在入口处（z=4），看向后墙
+    camera.position.set(0, 1.6, 4)
   }, [camera, isMobile])
 
   useEffect(() => {
@@ -466,12 +463,13 @@ function CameraRig({ isMobile }: { isMobile: boolean }) {
   return (
     <OrbitControls
       ref={controlsRef}
-      target={[0, 1.6, isMobile ? 0 : -1.5]}
+      target={[0, 1.6, -1.5]}
       enablePan={!isMobile}
-      enableZoom={!isMobile}
+      // 移动端允许双指缩放，能在房间内移动观察
+      enableZoom
       enableRotate
-      minDistance={isMobile ? 0.01 : 0.5}
-      maxDistance={isMobile ? 0.01 : 10}
+      minDistance={isMobile ? 0.5 : 0.5}
+      maxDistance={isMobile ? 8 : 10}
       minPolarAngle={0.25}
       maxPolarAngle={Math.PI - 0.25}
       rotateSpeed={isMobile ? -0.55 : -0.65}
@@ -526,7 +524,7 @@ export function GalleryScene({
         alpha: false,
         toneMapping: THREE.NoToneMapping,
       }}
-      camera={{ fov: isMobile ? 75 : 70, near: 0.1, far: 100, position: [0, 1.6, 4] }}
+      camera={{ fov: isMobile ? 85 : 70, near: 0.1, far: 100, position: [0, 1.6, 4] }}
       onPointerMissed={() => {}}
       className="!absolute inset-0"
     >
