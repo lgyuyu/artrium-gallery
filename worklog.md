@@ -405,3 +405,24 @@ Stage Summary:
 - 严格按参考图重做: 灰墙+浅灰顶+白地+黑框+暖白聚光+墙顶灯带
 - 灯带是关键设计，分隔墙顶增加立体感
 - 射灯无可见灯具，只有光斑
+
+---
+Task ID: 21
+Agent: 主控Agent (Claude)
+Task: 删除三角形光束(灯花)
+
+Work Log:
+- 用户反馈：画作上方有三角形/锥形的白色光束(灯花)还在，参考图没有
+- 定位：coneGeometry 可见光束圆锥，从天花板到画作，呈三角形
+- 删除：移除整个可见光束 mesh(coneGeometry + meshBasicMaterial)
+- 保留：spotLight 光源（自然在画作上形成光斑，无可见光束几何体）
+- 清理：移除 beamLen/beamR 变量，beamOpacity 配置项不再使用
+- 验证(Agent Browser + VLM):
+  · 三角形光束已消失 ✓
+  · 画作被照亮(光斑自然形成) ✓
+  · 墙顶灯带保留 ✓
+  · 整体简洁明亮 ✓
+
+Stage Summary:
+- 三角形灯花已删除
+- 射灯现在只有光斑无可见光束，符合参考图
