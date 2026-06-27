@@ -1,8 +1,5 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// VR线上画展 - Prisma Schema
+// 艺境美术 ARTRIUM
 
 generator client {
   provider = "prisma-client-js"
@@ -13,20 +10,43 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// 机构信息（单条记录，V1.0 全局一个机构）
+model Organization {
+  id            String   @id @default(cuid())
+  name          String   @default("艺境美术 ARTRIUM")
+  slogan        String?  // 副标题，如"学生画展"
+  logo          String?  // logo 图片路径
+  defaultStyle  String   @default("modern") // modern | cozy 全局默认风格
+  adminPassword String   @default("art2025") // 管理后台口令
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
-model Post {
+// 学生
+model Student {
   id        String   @id @default(cuid())
-  title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
+  name      String
+  age       String?  // 年龄或班级，字符串灵活存储
+  bio       String?  // 简介
+  style     String   @default("modern") // 展厅风格 modern | cozy
+  order     Int      @default(0) // 在大厅的排序
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  artworks  Artwork[]
+}
+
+// 画作
+model Artwork {
+  id          String   @id @default(cuid())
+  title       String   // 画作名称
+  imageUrl    String   // 图片路径
+  artworkDate String?  // 创作时间（字符串，灵活，如"2025年5月"）
+  description String?  // 简短描述
+  order       Int      @default(0) // 墙上展示顺序
+  studentId   String
+  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([studentId])
 }
