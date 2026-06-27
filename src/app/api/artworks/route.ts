@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { verifyAdmin } from '@/lib/admin'
-import { writeFile, mkdir } from 'fs/promises'
-import { existsSync } from 'fs'
-import path from 'path'
-import { randomUUID } from 'crypto'
 
 // 上传画作（需口令）- multipart/form-data
 // 字段: file (图片), studentId, title, artworkDate?, description?
+// 图片二进制直接存数据库 Upload 表，彻底避免发布丢失
 export async function POST(req: NextRequest) {
   const auth = await verifyAdmin()
   if (!auth.ok) {
@@ -48,23 +45,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '图片大小不能超过 10MB' }, { status: 400 })
   }
 
-  // 生成唯一文件名
-  const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
-  const fileName = `${randomUUID()}.${ext}`
-  // 写入 public/uploads（同时通过 /api/uploads/[file] 动态路由提供访问，兼容所有部署环境）
-  const uploadDir = path.join(process.cwd(), 'public', 'uploads')
-  if (!existsSync(uploadDir)) {
-    await mkdir(uploadDir, { recursive: true })
-  }
-  const filePath = path.join(uploadDir, fileName)
-
-  // 写入文件
+  // 读取文件二进制，存入数据库 Upload 表
   const arrayBuffer = await file.arrayBuffer()
   const buffer = Buffer.from(arrayBuffer)
-  await writeFile(filePath, buffer)
 
-  // 使用动态 API 路由访问，确保所有环境下都能读取
-  const imageUrl = `/api/uploads/${fileName}`
+  const upload = await db.upload.create({
+    data: {
+      data: buffer,
+      mimeType: file.type,
+      size: file.size,
+    },
+  })
+
+  // imageUrl 指向动态图片 API
+  const imageUrl = `/api/image/${upload.id}`
 
   // 取该学生当前最大 order
   const maxOrder = await db.artwork.aggregate({

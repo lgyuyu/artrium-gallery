@@ -36,7 +36,7 @@ export async function PATCH(
   return NextResponse.json(updated)
 }
 
-// 删除画作（需口令）- 同时删除上传的文件（仅删除 /uploads/ 下的，预设画作图保留）
+// 删除画作（需口令）- 同步删除数据库中的图片数据或文件系统中的旧文件
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -55,15 +55,20 @@ export async function DELETE(
   // 删除数据库记录
   await db.artwork.delete({ where: { id } })
 
-  // 删除文件（处理 /uploads/ 和 /api/uploads/ 两种路径）
+  // 删除图片数据（支持三种路径格式）
   const fileUrl = existing.imageUrl
-  let fileName: string | null = null
-  if (fileUrl.startsWith('/uploads/')) {
-    fileName = fileUrl.replace('/uploads/', '')
-  } else if (fileUrl.startsWith('/api/uploads/')) {
-    fileName = fileUrl.replace('/api/uploads/', '')
+  // 1. 数据库存储：/api/image/[uploadId]
+  if (fileUrl.startsWith('/api/image/')) {
+    const uploadId = fileUrl.replace('/api/image/', '')
+    try {
+      await db.upload.delete({ where: { id: uploadId } })
+    } catch {
+      // upload 记录不存在则忽略
+    }
   }
-  if (fileName) {
+  // 2. 旧文件系统：/api/uploads/[file] 或 /uploads/[file]
+  else if (fileUrl.startsWith('/api/uploads/') || fileUrl.startsWith('/uploads/')) {
+    const fileName = fileUrl.replace(/^\/(api\/)?uploads\//, '')
     const filePath = path.join(process.cwd(), 'public', 'uploads', fileName)
     try {
       await unlink(filePath)
@@ -71,6 +76,7 @@ export async function DELETE(
       // 文件不存在则忽略
     }
   }
+  // 3. 预设画作 /artworks/xxx 不删除
 
   return NextResponse.json({ success: true })
 }

@@ -628,3 +628,40 @@ Stage Summary:
 - 上传图片通过 /api/uploads/[file] 动态路由提供访问
 - 兼容所有部署环境(dev/standalone/preview)
 - 已有 /uploads/ 路径的旧数据仍可通过静态访问(本地)或后续迁移
+
+---
+Task ID: 30
+Agent: 主控Agent (Claude)
+Task: 彻底修复发布丢失上传画作
+
+根因分析:
+- output: "standalone" 构建，重新发布时 public/uploads/ 运行时写入的文件丢失
+- 数据库 db/custom.db 是持久的，发布不丢
+- 之前的方案(动态API读文件)治标不治本，文件本身在发布时被清掉
+
+彻底解决方案: 图片二进制存数据库
+1. Prisma 新增 Upload 模型:
+   - id, data (Bytes), mimeType, size, createdAt
+   - db:push 同步 schema
+2. 上传 API (artworks/route.ts) 重写:
+   - 读取文件二进制 → Buffer
+   - db.upload.create 存入数据库
+   - imageUrl = /api/image/[uploadId]
+3. 新增 /api/image/[id]/route.ts:
+   - 从数据库读取图片二进制返回
+   - 设置 Content-Type 和长缓存
+4. 删除 API (artworks/[id]/route.ts) 重写:
+   - 支持3种路径: /api/image/(数据库)、/api/uploads/、/uploads/(旧文件)
+   - 删除 /api/image/ 路径时同步删除 Upload 记录
+
+验证:
+- 上传测试: imageUrl 返回 /api/image/[id] ✓
+- 图片访问: 200 image/jpeg 197222 bytes ✓
+- 3D展厅加载: 5幅画正常显示无404 ✓
+- 数据库确认: Upload 表有1条记录(197KB) ✓
+- 删除画作: 同步删除 Upload 记录 ✓
+
+Stage Summary:
+- 图片完全存数据库，发布永不丢失
+- 兼容旧路径(/uploads/, /api/uploads/)的删除处理
+- 预设画作(/artworks/)仍用静态文件

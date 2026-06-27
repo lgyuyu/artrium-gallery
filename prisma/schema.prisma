@@ -39,7 +39,7 @@ model Student {
 model Artwork {
   id          String   @id @default(cuid())
   title       String   // 画作名称
-  imageUrl    String   // 图片路径
+  imageUrl    String   // 图片访问路径（/api/image/[uploadId] 或 /artworks/xxx 预设图）
   artworkDate String?  // 创作时间（字符串，灵活，如"2025年5月"）
   description String?  // 简短描述
   order       Int      @default(0) // 墙上展示顺序
@@ -49,4 +49,13 @@ model Artwork {
   updatedAt   DateTime @updatedAt
 
   @@index([studentId])
+}
+
+// 上传文件（图片二进制存数据库，彻底避免发布丢失）
+model Upload {
+  id        String   @id @default(cuid())
+  data      Bytes    // 图片二进制数据
+  mimeType  String   // image/jpeg, image/png 等
+  size      Int      // 文件大小（字节）
+  createdAt DateTime @default(now())
 }
