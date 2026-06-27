@@ -55,9 +55,16 @@ export async function DELETE(
   // 删除数据库记录
   await db.artwork.delete({ where: { id } })
 
-  // 删除文件（仅 /uploads/ 路径下的）
-  if (existing.imageUrl.startsWith('/uploads/')) {
-    const filePath = path.join(process.cwd(), 'public', existing.imageUrl)
+  // 删除文件（处理 /uploads/ 和 /api/uploads/ 两种路径）
+  const fileUrl = existing.imageUrl
+  let fileName: string | null = null
+  if (fileUrl.startsWith('/uploads/')) {
+    fileName = fileUrl.replace('/uploads/', '')
+  } else if (fileUrl.startsWith('/api/uploads/')) {
+    fileName = fileUrl.replace('/api/uploads/', '')
+  }
+  if (fileName) {
+    const filePath = path.join(process.cwd(), 'public', 'uploads', fileName)
     try {
       await unlink(filePath)
     } catch {

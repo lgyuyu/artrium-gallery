@@ -597,3 +597,34 @@ Stage Summary:
 - 移动端相机位置/方向/FOV 已与PC端同步
 - 手机端能看到和PC端一样的4幅画和空间布局
 - 注: 手机屏幕物理尺寸限制，视觉压缩感无法完全消除，但空间内容已同步
+
+---
+Task ID: 29
+Agent: 主控Agent (Claude)
+Task: 修复上传画作后图片404
+
+Work Log:
+问题: 上传画作后图片404找不到，报错 "Could not load /uploads/xxx.jpg"
+原因: 预览环境(standalone构建)运行时写入 public/uploads 的文件无法通过静态路径访问
+
+修复方案: 新增动态图片 API 路由
+1. 创建 /api/uploads/[file]/route.ts:
+   - GET 请求动态读取 public/uploads 或 uploads 目录下的文件
+   - 根据扩展名设置 Content-Type
+   - 防止路径遍历(过滤..和/)
+   - 设置长缓存 Cache-Control
+2. 修改上传 API (artworks/route.ts):
+   - imageUrl 从 /uploads/fileName 改为 /api/uploads/fileName
+   - 文件仍写入 public/uploads(本地存储)
+3. 修改删除 API (artworks/[id]/route.ts):
+   - 兼容处理 /uploads/ 和 /api/uploads/ 两种路径的文件删除
+
+验证:
+- curl 上传测试: imageUrl 返回 /api/uploads/xxx.jpg ✓
+- curl 访问 /api/uploads/xxx.jpg: 200 image/jpeg ✓
+- Agent Browser 3D展厅: 画作正常显示无404，5幅画全部加载 ✓
+
+Stage Summary:
+- 上传图片通过 /api/uploads/[file] 动态路由提供访问
+- 兼容所有部署环境(dev/standalone/preview)
+- 已有 /uploads/ 路径的旧数据仍可通过静态访问(本地)或后续迁移

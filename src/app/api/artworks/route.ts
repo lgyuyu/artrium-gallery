@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
   // 生成唯一文件名
   const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg'
   const fileName = `${randomUUID()}.${ext}`
+  // 写入 public/uploads（同时通过 /api/uploads/[file] 动态路由提供访问，兼容所有部署环境）
   const uploadDir = path.join(process.cwd(), 'public', 'uploads')
   if (!existsSync(uploadDir)) {
     await mkdir(uploadDir, { recursive: true })
@@ -62,7 +63,8 @@ export async function POST(req: NextRequest) {
   const buffer = Buffer.from(arrayBuffer)
   await writeFile(filePath, buffer)
 
-  const imageUrl = `/uploads/${fileName}`
+  // 使用动态 API 路由访问，确保所有环境下都能读取
+  const imageUrl = `/api/uploads/${fileName}`
 
   // 取该学生当前最大 order
   const maxOrder = await db.artwork.aggregate({
