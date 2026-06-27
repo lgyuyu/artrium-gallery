@@ -71,20 +71,20 @@ export default async function HomePage() {
             <span className="h-px w-12 bg-gold/60" />
           </div>
 
-          <p className="text-xs sm:text-sm tracking-[0.35em] uppercase text-gold font-medium mb-4 animate-fade-in" style={{ animationDelay: '100ms', opacity: 0 }}>
+          <p className="text-xs sm:text-sm tracking-[0.35em] uppercase text-gold font-medium mb-4 animate-fade-in" style={{ animationDelay: '100ms' }}>
             ARTRIUM · 艺境美术
           </p>
 
-          <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl font-medium leading-tight animate-fade-in" style={{ animationDelay: '200ms', opacity: 0 }}>
+          <h1 className="font-serif text-5xl sm:text-6xl md:text-7xl font-medium leading-tight animate-fade-in" style={{ animationDelay: '200ms' }}>
             学生线上画展
           </h1>
 
-          <p className="mt-6 text-base sm:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed animate-fade-in" style={{ animationDelay: '300ms', opacity: 0 }}>
+          <p className="mt-6 text-base sm:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed animate-fade-in" style={{ animationDelay: '300ms' }}>
             {orgSlogan}
           </p>
 
           {/* 数据统计 */}
-          <div className="mt-10 flex items-center justify-center gap-8 sm:gap-12 animate-fade-in" style={{ animationDelay: '400ms', opacity: 0 }}>
+          <div className="mt-10 flex items-center justify-center gap-8 sm:gap-12 animate-fade-in" style={{ animationDelay: '400ms' }}>
             <div className="text-center">
               <p className="font-serif text-3xl sm:text-4xl text-foreground">{studentList.length}</p>
               <p className="text-xs text-muted-foreground tracking-wider mt-1">位小艺术家</p>
@@ -97,7 +97,7 @@ export default async function HomePage() {
           </div>
 
           {/* 滚动提示 */}
-          <div className="mt-14 flex flex-col items-center gap-2 text-muted-foreground animate-fade-in" style={{ animationDelay: '500ms', opacity: 0 }}>
+          <div className="mt-14 flex flex-col items-center gap-2 text-muted-foreground animate-fade-in" style={{ animationDelay: '500ms' }}>
             <span className="text-xs tracking-widest">向下探索</span>
             <ChevronDown className="h-4 w-4 animate-bounce" />
           </div>

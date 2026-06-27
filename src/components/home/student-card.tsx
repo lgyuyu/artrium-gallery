@@ -18,7 +18,7 @@ export function StudentCard({ id, name, age, bio, coverImage, artworkCount, inde
   return (
     <div
       className="group relative bg-card rounded-xl overflow-hidden frame-shadow transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl animate-fade-in"
-      style={{ animationDelay: `${index * 80}ms`, opacity: 0 }}
+      style={{ animationDelay: `${index * 80}ms` }}
     >
       {/* 代表画作 */}
       <Link href={`/gallery/${id}`} className="block relative aspect-[4/5] overflow-hidden bg-muted">

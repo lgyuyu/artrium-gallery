@@ -1,7 +1,7 @@
 'use client'
 
 import { Canvas, useFrame, useThree, ThreeEvent } from '@react-three/fiber'
-import { OrbitControls, Html, useProgress } from '@react-three/drei'
+import { OrbitControls, useTexture, Html, useProgress } from '@react-three/drei'
 import * as THREE from 'three'
 import { useState, useRef, useEffect, useMemo, Suspense } from 'react'
 
@@ -218,7 +218,7 @@ function FramedArtwork({
   )
 }
 
-// 画作平面（手动加载贴图，避免 hook immutability 规则）
+// 画作平面（用 drei useTexture，在 onLoad 回调中配置）
 function ArtworkPlane({
   url,
   W,
@@ -230,42 +230,24 @@ function ArtworkPlane({
   H: number
   hovered: boolean
 }) {
-  const [texture, setTexture] = useState<THREE.Texture | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    const loader = new THREE.TextureLoader()
-    loader.load(
-      url,
-      (t) => {
-        if (cancelled) {
-          t.dispose()
-          return
-        }
-        t.colorSpace = THREE.SRGBColorSpace
-        t.anisotropy = 8
-        t.needsUpdate = true
-        setTexture(t)
-      },
-      undefined,
-      (err) => console.error('画作加载失败:', url, err)
-    )
-    return () => {
-      cancelled = true
-    }
-  }, [url])
+  // useTexture 第二参数是 onLoad 回调，texture 在此配置不会触发 immutability 规则
+  const texture = useTexture(url, (t) => {
+    t.colorSpace = THREE.SRGBColorSpace
+    t.anisotropy = 8
+    t.needsUpdate = true
+  })
 
   return (
     <mesh position={[0, 0, 0.005]}>
       <planeGeometry args={[W, H]} />
       <meshStandardMaterial
-        map={texture ?? undefined}
-        color={texture ? '#ffffff' : '#3a3a3a'}
+        map={texture}
+        color="#ffffff"
         roughness={0.6}
         metalness={0}
-        emissive={hovered && texture ? '#ffffff' : '#000000'}
+        emissive={hovered ? '#ffffff' : '#000000'}
         emissiveIntensity={hovered ? 0.08 : 0}
-        emissiveMap={texture ?? undefined}
+        emissiveMap={texture}
       />
     </mesh>
   )
