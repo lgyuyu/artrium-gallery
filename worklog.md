@@ -482,3 +482,18 @@ Work Log:
 Stage Summary:
 - 地板和墙面亮度已提升20%，整体空间更明亮
 - 墙顶灯带仍清晰可见，光斑效果保持
+
+---
+Task ID: 24
+Agent: 主控Agent (Claude)
+Task: 光斑角度增大到60°
+
+Work Log:
+- beamAngle 0.4弧度(23°) → 1.047弧度(60°)
+- 验证(Agent Browser + VLM):
+  · 光斑面积变大，覆盖画作完整范围 ✓
+  · 光斑柔和过渡到周边墙面 ✓
+  · 整体照明效果优秀 ✓
+
+Stage Summary:
+- 光斑扇形面积增大到60°，画作被充分照亮

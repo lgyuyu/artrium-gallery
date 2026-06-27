@@ -280,7 +280,7 @@ function FramedArtwork({
   // 灯在画作上方稍前方，target 对准画作中心 [0,0,0]，光斑自然落在画上
   const lampY = WALL_H - slot.pos[1] - 0.05   // 灯贴天花板
   const lampZ = 0.15                           // 灯在画作前方0.15m（小偏移，让光斜照到画面）
-  const beamAngle = 0.4                        // 聚光角度（覆盖画作大小）
+  const beamAngle = 1.047                      // 聚光角度 60°（覆盖画作及周边）
 
   return (
     <group
