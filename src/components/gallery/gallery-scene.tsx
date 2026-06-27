@@ -276,10 +276,11 @@ function FramedArtwork({
   const frameThickness = 0.05
   const frameW = W + frameThickness * 2
   const frameH = H + frameThickness * 2
-  // 射灯：嵌入式，从天花板垂直向下照画作（无可见灯具，只有光斑）
+  // 射灯：嵌入式，从天花板斜向下照画作（光斑精准覆盖画作中心）
+  // 灯在画作上方稍前方，target 对准画作中心 [0,0,0]，光斑自然落在画上
   const lampY = WALL_H - slot.pos[1] - 0.05   // 灯贴天花板
-  const lampZ = 0.35                           // 灯在画作前方0.35m
-  const beamAngle = 0.26                       // 聚光角度
+  const lampZ = 0.15                           // 灯在画作前方0.15m（小偏移，让光斜照到画面）
+  const beamAngle = 0.4                        // 聚光角度（覆盖画作大小）
 
   return (
     <group
@@ -310,25 +311,25 @@ function FramedArtwork({
         <ArtworkPlane url={artwork.imageUrl} W={W} H={H} hovered={hovered} />
       </Suspense>
 
-      {/* ===== 嵌入式射灯（无可见灯具，无光束，只有光斑）===== */}
+      {/* ===== 嵌入式射灯（无可见灯具，光斑精准对准画作中心）===== */}
       {/* 天花板上极小的灯点（几乎看不见） */}
       <mesh position={[0, lampY, lampZ]}>
         <cylinderGeometry args={[0.03, 0.03, 0.02, 12]} />
         <meshStandardMaterial color="#000000" />
       </mesh>
 
-      {/* 聚光灯光源（从天花板照向画作，形成自然光斑） */}
+      {/* 聚光灯光源（从天花板照向画作中心，光斑覆盖画作） */}
       <spotLight
         ref={spotRef}
         position={[0, lampY, lampZ]}
         angle={beamAngle}
-        penumbra={0.4}
+        penumbra={0.5}
         intensity={cfg.spot}
         color={cfg.lightColor}
-        distance={7}
-        decay={0.6}
+        distance={8}
+        decay={0.8}
       />
-      {/* spotLight target 在画作中心 */}
+      {/* spotLight target 精准对准画作中心 [0,0,0] */}
       <primitive object={targetObj} position={[0, 0, 0]} />
 
       {/* hover 时画作名 */}
