@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { verifyAdmin } from '@/lib/admin'
+import { backupDB } from '@/lib/db-persist'
 import { unlink } from 'fs/promises'
 import path from 'path'
 
@@ -33,6 +34,7 @@ export async function PATCH(
     },
   })
 
+  backupDB()
   return NextResponse.json(updated)
 }
 
@@ -78,5 +80,6 @@ export async function DELETE(
   }
   // 3. 预设画作 /artworks/xxx 不删除
 
+  backupDB()
   return NextResponse.json({ success: true })
 }

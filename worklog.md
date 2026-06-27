@@ -665,3 +665,57 @@ Stage Summary:
 - 图片完全存数据库，发布永不丢失
 - 兼容旧路径(/uploads/, /api/uploads/)的删除处理
 - 预设画作(/artworks/)仍用静态文件
+
+---
+Task ID: 31
+Agent: 主控Agent (Claude)
+Task: 彻底解决数据库第二天莫名消失
+
+根因分析:
+- 数据库原位置 /home/z/my-project/db/custom.db 在项目目录内
+- 预览环境重新发布/定时重启时，项目目录会被重建，db 文件丢失
+- "第二天消失"= 环境定时重启，数据库被重置为初始状态
+- 验证: /home/z/.local 修改于6月16日(环境创建)，/home/z/my-project 修改于6月27日(今天)，说明项目目录每次发布都重建
+
+彻底解决方案: 数据库迁移到持久目录 + 自动备份 + 启动恢复
+
+1. 数据库迁移到持久目录:
+   - .env: DATABASE_URL 从 file:/home/z/my-project/db/custom.db → file:/home/z/.local/artium-data/custom.db
+   - /home/z/.local 是用户级持久目录(6月16日创建至今未变)
+   - 手动迁移现有数据库 + 创建初始备份
+
+2. 新增 db-persist.ts 数据保护库:
+   - ensurePersistentDB(): 启动时确保持久目录存在，旧库自动迁移
+   - backupDB(): 数据变更后备份(保留最近5个)
+   - recoverIfEmpty(): 启动时检测库为空(<10KB)则从最新备份恢复
+   - restoreFromBackup(): 从备份恢复数据库
+
+3. db.ts 启动时调用:
+   - ensurePersistentDB() 确保持久目录
+   - recoverIfEmpty() 检测空库自动恢复
+
+4. 所有写操作API添加 backupDB():
+   - artworks POST(上传) ✓
+   - artworks/[id] PATCH(更新)/DELETE(删除) ✓
+   - artworks/reorder PATCH(排序) ✓
+   - students POST(添加) ✓
+   - students/[id] PATCH(更新)/DELETE(删除) ✓
+   - organization PATCH(机构设置) ✓
+
+验证:
+- 数据库从持久位置加载，4学生数据完整 ✓
+- 上传图片 → 自动备份创建(带时间戳) ✓
+- 图片从持久DB访问: 200 image/jpeg 246KB ✓
+- 删除画作 → 自动备份 ✓
+- 备份保留最近5个 ✓
+
+三重数据保护:
+1. 主库: /home/z/.local/artium-data/custom.db (持久目录)
+2. 备份: /home/z/.local/artium-data/backups/ (最近5个带时间戳)
+3. 恢复: 启动时空库自动从备份恢复
+
+Stage Summary:
+- 数据库迁移到 /home/z/.local/artium-data/ (持久目录，发布不丢)
+- 每次数据变更自动备份(保留5个)
+- 启动时空库自动恢复
+- 三重保护，彻底解决数据消失问题

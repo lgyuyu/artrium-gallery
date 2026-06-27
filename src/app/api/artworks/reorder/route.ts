@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { verifyAdmin } from '@/lib/admin'
+import { backupDB } from '@/lib/db-persist'
 
 // 批量更新画作顺序（需口令）
 // body: { items: [{ id, order }] }
@@ -27,5 +28,6 @@ export async function PATCH(req: NextRequest) {
     )
   )
 
+  backupDB()
   return NextResponse.json({ success: true })
 }

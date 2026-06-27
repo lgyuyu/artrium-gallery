@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { verifyAdmin } from '@/lib/admin'
+import { backupDB } from '@/lib/db-persist'
 
 // 上传画作（需口令）- multipart/form-data
 // 字段: file (图片), studentId, title, artworkDate?, description?
@@ -77,6 +78,9 @@ export async function POST(req: NextRequest) {
       order: (maxOrder._max.order ?? -1) + 1,
     },
   })
+
+  // 数据变更后备份到持久目录
+  backupDB()
 
   return NextResponse.json(artwork, { status: 201 })
 }

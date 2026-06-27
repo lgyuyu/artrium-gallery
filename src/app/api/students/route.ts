@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { verifyAdmin } from '@/lib/admin'
+import { backupDB } from '@/lib/db-persist'
 
 // 获取所有学生（公开）- 含代表画作（第一幅）和画作数量
 export async function GET() {
@@ -55,5 +56,6 @@ export async function POST(req: NextRequest) {
     },
   })
 
+  backupDB()
   return NextResponse.json(student, { status: 201 })
 }

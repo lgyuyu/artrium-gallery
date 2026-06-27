@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { verifyAdmin } from '@/lib/admin'
+import { backupDB } from '@/lib/db-persist'
 
 // 获取机构信息（公开）
 export async function GET() {
@@ -52,5 +53,6 @@ export async function PATCH(req: NextRequest) {
     },
   })
 
+  backupDB()
   return NextResponse.json(updated)
 }

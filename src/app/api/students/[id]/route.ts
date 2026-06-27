@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { verifyAdmin } from '@/lib/admin'
+import { backupDB } from '@/lib/db-persist'
 
 // 获取单个学生详情（公开）- 含所有画作
 export async function GET(
@@ -54,6 +55,7 @@ export async function PATCH(
     },
   })
 
+  backupDB()
   return NextResponse.json(updated)
 }
 
@@ -74,5 +76,6 @@ export async function DELETE(
   }
 
   await db.student.delete({ where: { id } })
+  backupDB()
   return NextResponse.json({ success: true })
 }
