@@ -205,3 +205,31 @@ Stage Summary:
 - 3D展厅体验大幅提升(空间感+光线+设计感+射灯)
 - 批量上传提升管理效率
 - 品牌升级为"星玥艺术"+新logo
+
+---
+Task ID: 16
+Agent: 主控Agent (Claude)
+Task: 展厅4项问题修复
+
+Work Log:
+1. 去线条: 删除3道金色腰线(Rail)、地面ringGeometry边框、天花板灯轨横杆、墙面上下分色。只保留干净的单色墙/地/顶。
+2. 空间缩小20%: 18x14 → 14x11, 墙高4.5→4.2。墙位间距调整为3m, 画作尺寸1.6x2.0→1.5x1.88, 相机边界调整为±6.4/±4.9。
+3. 射灯真正射出光:
+   - 简化灯具模型(连接杆+黑色灯头+金色环+发光灯泡)
+   - 新增可见光束: 半透明圆锥(coneGeometry)从灯头到画作, AdditiveBlending发光感, opacity 0.08
+   - spotLight 用 primitive 把 target 加入场景(修复之前 target 未挂载场景导致光不射出的问题)
+   - spotIntensity 4.5→8, decay 1.1→0.8, angle 0.45→0.32(更聚焦)
+   - 降低 ambient 0.85→0.55, 让射灯光斑效果突出
+4. 反转滑动方向: OrbitControls rotateSpeed 设为负值(-0.65), 鼠标向右拖→视角向右转(符合第一人称直觉)
+
+验证(Agent Browser + VLM):
+- 墙面简洁干净无多余线条 ✓
+- 空间感开阔 ✓
+- 射灯可见光束从灯到画 ✓
+- 画作被射灯照亮 ✓
+- 鼠标向右拖视角向右转 ✓
+- lint 0 errors
+
+Stage Summary:
+- 展厅4项问题全部修复
+- 设计理念: 简洁+真实光效+直觉操作
