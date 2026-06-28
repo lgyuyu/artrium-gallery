@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { Users, Image as ImageIcon, Settings, ArrowLeft, ExternalLink } from 'lucide-react'
+import { Users, Image as ImageIcon, Settings, ArrowLeft, ExternalLink, LogOut } from 'lucide-react'
 import { useAdminStore } from '@/lib/admin-store'
 import { AdminLogin } from './admin-login'
 import { StudentsTab } from './students-tab'
@@ -64,7 +64,7 @@ export function AdminClient({ orgName, orgLogo }: { orgName: string; orgLogo: st
               onClick={logout}
               className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-red-500 transition-colors px-3 py-1.5 rounded-md hover:bg-accent/50"
             >
-              <Lock className="h-3.5 w-3.5" />
+              <LogOut className="h-3.5 w-3.5" />
               退出登录
             </button>
             <Link
