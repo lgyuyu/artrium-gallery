@@ -3,9 +3,9 @@ import path from 'path'
 
 // ============ 持久化数据保护 ============
 // 问题: 项目目录 /home/z/my-project 在重新发布时会被重建，
-//       导致其中的 db/custom.db 数据库丢失，上传的画作全部消失。
-// 方案: 数据库存到持久目录 /home/z/.local/artium-data/，
-//       并自动备份到多个位置，启动时自动迁移和恢复。
+//       .env 可能被重置，db/custom.db 丢失，上传画作消失。
+// 方案: 程序化强制 DATABASE_URL 指向持久目录，
+//       自动备份+启动恢复+空库检测。
 
 const PERSIST_DIR = '/home/z/.local/artium-data'
 const PERSIST_DB = path.join(PERSIST_DIR, 'custom.db')
@@ -14,13 +14,15 @@ const BACKUP_DIR = path.join(PERSIST_DIR, 'backups')
 // 旧数据库位置（项目目录内，发布会丢）
 const OLD_DB = path.join(process.cwd(), 'db', 'custom.db')
 
-// 备份保留数量（2000幅画时数据库约200MB，3个备份约600MB，控制空间占用）
+// 备份保留数量
 const MAX_BACKUPS = 3
 
 /**
  * 初始化持久数据目录
+ * - 程序化设置 DATABASE_URL（覆盖 .env，确保 Prisma 用持久库）
  * - 创建持久目录
  * - 如果持久位置没数据库但旧位置有，自动迁移
+ * - 如果持久库为空但备份有数据，自动恢复
  */
 export function ensurePersistentDB() {
   try {
@@ -39,20 +41,27 @@ export function ensurePersistentDB() {
       console.log('[数据保护] 迁移完成:', PERSIST_DB)
     }
 
-    // 3. 如果持久位置有数据库，同时复制回项目目录（兼容某些需要项目内 db 的场景）
-    if (existsSync(PERSIST_DB)) {
-      const projectDbDir = path.join(process.cwd(), 'db')
-      if (!existsSync(projectDbDir)) {
-        mkdirSync(projectDbDir, { recursive: true })
-      }
-      // 只有当项目内 db 不存在或更旧时才复制
-      const projectDb = path.join(projectDbDir, 'custom.db')
-      if (!existsSync(projectDb)) {
-        copyFileSync(PERSIST_DB, projectDb)
+    // 3. 如果持久库不存在或为空，尝试从备份恢复
+    if (!existsSync(PERSIST_DB)) {
+      console.log('[数据保护] 持久数据库不存在，尝试从备份恢复...')
+      restoreFromBackup()
+    } else {
+      const stat = statSync(PERSIST_DB)
+      // 数据库文件小于 10KB 视为空（正常有数据的库至少几十KB）
+      if (stat.size < 10240) {
+        console.log('[数据保护] 持久数据库过小(', stat.size, 'bytes)，可能为空，尝试从备份恢复...')
+        restoreFromBackup()
       }
     }
+
+    // 4. 关键：程序化设置 DATABASE_URL，覆盖 .env（防止 .env 被发布重置）
+    // 必须在 PrismaClient 初始化前执行
+    process.env.DATABASE_URL = `file:${PERSIST_DB}`
+    console.log('[数据保护] DATABASE_URL 已设置为持久位置:', PERSIST_DB)
   } catch (e) {
     console.error('[数据保护] 初始化失败:', e)
+    // 即使保护逻辑失败，也要尝试设置环境变量
+    process.env.DATABASE_URL = `file:${PERSIST_DB}`
   }
 }
 
@@ -78,7 +87,6 @@ export function backupDB() {
       }))
       .sort((a, b) => b.mtime - a.mtime)
 
-    // 删除多余备份
     for (let i = MAX_BACKUPS; i < backups.length; i++) {
       try {
         unlinkSync(backups[i].path)
@@ -91,26 +99,11 @@ export function backupDB() {
 }
 
 /**
- * 检查数据库是否为空（无任何数据表或表为空）
- * 如果为空且备份存在，自动从最新备份恢复
+ * 检查数据库是否为空，如果是则从备份恢复
+ * （保留此函数供外部调用，实际逻辑已在 ensurePersistentDB 中处理）
  */
 export function recoverIfEmpty() {
-  try {
-    if (!existsSync(PERSIST_DB)) {
-      console.log('[数据保护] 持久数据库不存在，尝试从备份恢复...')
-      restoreFromBackup()
-      return
-    }
-
-    const stat = statSync(PERSIST_DB)
-    // 数据库文件小于 10KB 视为空（正常有数据的库至少几十KB）
-    if (stat.size < 10240) {
-      console.log('[数据保护] 数据库文件过小(', stat.size, 'bytes)，可能为空，尝试从备份恢复...')
-      restoreFromBackup()
-    }
-  } catch (e) {
-    console.error('[数据保护] 恢复检查失败:', e)
-  }
+  // 逻辑已合并到 ensurePersistentDB，此处保留空实现兼容 db.ts 调用
 }
 
 /**
@@ -132,20 +125,13 @@ function restoreFromBackup() {
       .sort((a, b) => b.mtime - a.mtime)
 
     if (backups.length === 0) {
-      console.log('[数据保护] 无可用备份')
+      console.log('[数据保护] 无可用备份，将创建空数据库')
       return
     }
 
     const latest = backups[0]
     copyFileSync(latest.path, PERSIST_DB)
     console.log('[数据保护] 已从备份恢复:', latest.name)
-
-    // 同步到项目目录
-    const projectDbDir = path.join(process.cwd(), 'db')
-    if (!existsSync(projectDbDir)) {
-      mkdirSync(projectDbDir, { recursive: true })
-    }
-    copyFileSync(PERSIST_DB, path.join(projectDbDir, 'custom.db'))
   } catch (e) {
     console.error('[数据保护] 恢复失败:', e)
   }

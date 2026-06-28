@@ -1,12 +1,18 @@
 // VR线上画展 - 数据库初始化脚本
 // 用法: bun run prisma/seed.ts
+// 安全初始化：只在数据库为空时才写入示例数据，不会覆盖已有数据
 import { db } from '../src/lib/db'
 
 async function main() {
-  // 清空旧数据
-  await db.artwork.deleteMany()
-  await db.student.deleteMany()
-  await db.organization.deleteMany()
+  // 检查是否已有数据，有则跳过初始化（防止覆盖用户上传的作品）
+  const existingStudents = await db.student.count()
+  const existingOrg = await db.organization.count()
+  if (existingStudents > 0 || existingOrg > 0) {
+    console.log(`[seed] 检测到已有数据(学生${existingStudents}位/机构${existingOrg}个)，跳过初始化，保留现有数据`)
+    return
+  }
+
+  console.log('[seed] 数据库为空，开始初始化示例数据...')
 
   // 1. 机构信息
   const org = await db.organization.create({

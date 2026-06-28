@@ -764,3 +764,48 @@ Stage Summary:
 - 列表查询不加载图片二进制(分表设计)
 - 备份减到3个控制空间
 - 优化后2000幅画约360MB，SQLite流畅可承受
+
+---
+Task ID: 33
+Agent: 主控Agent (Claude)
+Task: 彻底解决发布后上传作品被默认画作覆盖
+
+根因分析:
+- .env 的 DATABASE_URL 被发布流程重置回 file:/home/z/my-project/db/custom.db
+- Prisma 实际连接项目内 db(发布会丢)，而非持久目录
+- db-persist 的备份/恢复逻辑与 Prisma 实际用的库脱节
+- 之前虽然改过 .env，但发布时 .env 可能被重建覆盖
+
+彻底修复:
+1. db-persist.ts 程序化设置 DATABASE_URL:
+   - ensurePersistentDB() 中 process.env.DATABASE_URL = 'file:/home/z/.local/artium-data/custom.db'
+   - 覆盖 .env 配置，确保 Prisma 用持久库（无论 .env 怎么变）
+   - 在 PrismaClient 初始化前执行
+
+2. seed 脚本改为安全初始化:
+   - 检查已有数据，有则跳过（不覆盖）
+   - prisma/seed.ts: if (existingStudents > 0) return
+
+3. 应用层自动初始化:
+   - db.ts 启动后检查 organization.count()
+   - 如果为0(全新空库)，调用 seedSampleData() 初始化示例数据
+   - 不会覆盖用户已上传的作品
+
+4. 新增 src/lib/seed-data.ts:
+   - seedSampleData() 函数，只在空库时初始化
+   - 二次检查防止并发
+
+验证(模拟发布):
+1. 上传画作"发布不丢测试" → 成功
+2. 删除 db/ 目录 + 重启(模拟发布)
+3. 重启后:
+   - 原有4学生 + 8画作完整 ✓
+   - 上传的"发布不丢测试"画作还在 ✓
+   - 图片 /api/image/[id] 200 image/jpeg ✓
+4. dev log 确认: DATABASE_URL 已设置为持久位置
+
+Stage Summary:
+- DATABASE_URL 程序化强制指向持久目录(不依赖 .env)
+- seed 只在空库时初始化(不覆盖已有数据)
+- 应用层启动自动检测+初始化
+- 模拟发布验证: 上传作品永不丢失
