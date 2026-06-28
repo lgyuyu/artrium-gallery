@@ -14,8 +14,8 @@ const BACKUP_DIR = path.join(PERSIST_DIR, 'backups')
 // 旧数据库位置（项目目录内，发布会丢）
 const OLD_DB = path.join(process.cwd(), 'db', 'custom.db')
 
-// 备份保留数量
-const MAX_BACKUPS = 5
+// 备份保留数量（2000幅画时数据库约200MB，3个备份约600MB，控制空间占用）
+const MAX_BACKUPS = 3
 
 /**
  * 初始化持久数据目录

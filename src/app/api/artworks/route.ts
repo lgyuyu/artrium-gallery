@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { verifyAdmin } from '@/lib/admin'
 import { backupDB } from '@/lib/db-persist'
+import sharp from 'sharp'
 
 // 上传画作（需口令）- multipart/form-data
 // 字段: file (图片), studentId, title, artworkDate?, description?
@@ -46,15 +47,30 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '图片大小不能超过 10MB' }, { status: 400 })
   }
 
-  // 读取文件二进制，存入数据库 Upload 表
+  // 读取文件二进制，用 sharp 压缩后存数据库（节省存储，2000幅画仍流畅）
   const arrayBuffer = await file.arrayBuffer()
-  const buffer = Buffer.from(arrayBuffer)
+  const originalBuffer = Buffer.from(arrayBuffer)
+
+  // 压缩: 最大宽度1200，JPEG质量80，转JPEG格式（照片类JPEG比PNG小很多）
+  // GIF 压缩会丢失动画，保留原样
+  let compressedBuffer: Buffer
+  let storeMime: string
+  if (file.type === 'image/gif') {
+    compressedBuffer = originalBuffer
+    storeMime = 'image/gif'
+  } else {
+    compressedBuffer = await sharp(originalBuffer)
+      .resize(1000, 1300, { fit: 'inside', withoutEnlargement: true })
+      .jpeg({ quality: 72, progressive: true })
+      .toBuffer()
+    storeMime = 'image/jpeg'
+  }
 
   const upload = await db.upload.create({
     data: {
-      data: buffer,
-      mimeType: file.type,
-      size: file.size,
+      data: compressedBuffer,
+      mimeType: storeMime,
+      size: compressedBuffer.length,
     },
   })
 
