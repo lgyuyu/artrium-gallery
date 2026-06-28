@@ -61,9 +61,12 @@ export const db = {
     },
     async create({ data }: { data: any }) {
       const keys = Object.keys(data)
-      const placeholders = keys.map(() => '?').join(', ')
-      await execute(`INSERT INTO Organization (${keys.map(k => `"${k}"`).join(', ')}, "createdAt", "updatedAt") VALUES (${placeholders}, datetime('now'), datetime('now'))`, Object.values(data))
-      return data
+      const id = data.id || (await getClient()).execute("SELECT lower(hex(randomblob(12))) as id").then(r => r.rows[0].id)
+      const allKeys = data.id ? keys : ['id', ...keys]
+      const allVals = data.id ? Object.values(data) : [id, ...Object.values(data)]
+      const placeholders = allKeys.map(() => '?').join(', ')
+      await execute(`INSERT INTO Organization (${allKeys.map(k => `"${k}"`).join(', ')}, "createdAt", "updatedAt") VALUES (${placeholders}, datetime('now'), datetime('now'))`, allVals)
+      return (await query('SELECT * FROM Organization WHERE id = ?', [data.id || id]))[0]
     },
   },
 
@@ -90,9 +93,12 @@ export const db = {
     },
     async create({ data }: { data: any }) {
       const keys = Object.keys(data)
-      const placeholders = keys.map(() => '?').join(', ')
-      await execute(`INSERT INTO Student (${keys.map(k => `"${k}"`).join(', ')}, "createdAt", "updatedAt") VALUES (${placeholders}, datetime('now'), datetime('now'))`, Object.values(data))
-      const rows = await query('SELECT * FROM Student ORDER BY "createdAt" DESC LIMIT 1')
+      const id = data.id || (await getClient()).execute("SELECT lower(hex(randomblob(12))) as id").then(r => r.rows[0].id)
+      const allKeys = data.id ? keys : ['id', ...keys]
+      const allVals = data.id ? Object.values(data) : [id, ...Object.values(data)]
+      const placeholders = allKeys.map(() => '?').join(', ')
+      await execute(`INSERT INTO Student (${allKeys.map(k => `"${k}"`).join(', ')}, "createdAt", "updatedAt") VALUES (${placeholders}, datetime('now'), datetime('now'))`, allVals)
+      const rows = await query('SELECT * FROM Student WHERE id = ?', [data.id || id])
       return rows[0]
     },
     async update({ where, data }: { where: { id: string }, data: any }) {
@@ -131,10 +137,12 @@ export const db = {
     },
     async create({ data }: { data: any }) {
       const keys = Object.keys(data)
-      const placeholders = keys.map(() => '?').join(', ')
-      await execute(`INSERT INTO Artwork (${keys.map(k => `"${k}"`).join(', ')}, "createdAt", "updatedAt") VALUES (${placeholders}, datetime('now'), datetime('now'))`, Object.values(data))
-      const rows = await query('SELECT * FROM Artwork ORDER BY "createdAt" DESC LIMIT 1')
-      return rows[0]
+      const id = data.id || (await getClient()).execute("SELECT lower(hex(randomblob(12))) as id").then(r => r.rows[0].id)
+      const allKeys = data.id ? keys : ['id', ...keys]
+      const allVals = data.id ? Object.values(data) : [id, ...Object.values(data)]
+      const placeholders = allKeys.map(() => '?').join(', ')
+      await execute(`INSERT INTO Artwork (${allKeys.map(k => `"${k}"`).join(', ')}, "createdAt", "updatedAt") VALUES (${placeholders}, datetime('now'), datetime('now'))`, allVals)
+      return (await query('SELECT * FROM Artwork WHERE id = ?', [data.id || id]))[0]
     },
     async update({ where, data }: { where: { id: string }, data: any }) {
       const entries = Object.entries(data).filter(([_, v]) => v !== undefined)
@@ -157,9 +165,12 @@ export const db = {
     },
     async create({ data }: { data: any }) {
       const keys = Object.keys(data)
-      const placeholders = keys.map(() => '?').join(', ')
-      await execute(`INSERT INTO Upload (${keys.map(k => `"${k}"`).join(', ')}, "createdAt") VALUES (${placeholders}, datetime('now'))`, Object.values(data))
-      return data
+      const id = data.id || (await getClient()).execute("SELECT lower(hex(randomblob(12))) as id").then(r => r.rows[0].id)
+      const allKeys = data.id ? keys : ['id', ...keys]
+      const allVals = data.id ? Object.values(data) : [id, ...Object.values(data)]
+      const placeholders = allKeys.map(() => '?').join(', ')
+      await execute(`INSERT INTO Upload (${allKeys.map(k => `"${k}"`).join(', ')}, "createdAt") VALUES (${placeholders}, datetime('now'))`, allVals)
+      return { ...data, id: data.id || id }
     },
     async delete({ where }: { where: { id: string } }) {
       await execute('DELETE FROM Upload WHERE id = ?', [where.id])
