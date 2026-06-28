@@ -17,6 +17,11 @@ export function useAdminFetch() {
       }
       if (password) headers['x-admin-password'] = password
       const res = await fetch(url, { ...opts, headers })
+      // 401 = 密码已失效（可能被修改过），自动清除密码触发重新登录
+      if (res.status === 401) {
+        useAdminStore.getState().logout()
+        throw new Error('口令已失效，请重新登录')
+      }
       return res
     },
     [password]

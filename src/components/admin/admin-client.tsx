@@ -12,6 +12,7 @@ import { OrgTab } from './org-tab'
 
 export function AdminClient({ orgName, orgLogo }: { orgName: string; orgLogo: string }) {
   const password = useAdminStore((s) => s.password)
+  const logout = useAdminStore((s) => s.logout)
   // 处理 zustand persist hydration：客户端挂载后才读 store
   const [hydrated, setHydrated] = useState(false)
   const [tab, setTab] = useState('students')
@@ -59,6 +60,13 @@ export function AdminClient({ orgName, orgLogo }: { orgName: string; orgLogo: st
               <ExternalLink className="h-3.5 w-3.5" />
               查看大厅
             </Link>
+            <button
+              onClick={logout}
+              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-red-500 transition-colors px-3 py-1.5 rounded-md hover:bg-accent/50"
+            >
+              <Lock className="h-3.5 w-3.5" />
+              退出登录
+            </button>
             <Link
               href="/"
               className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md hover:bg-accent/50"
