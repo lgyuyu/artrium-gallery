@@ -5,26 +5,31 @@ import { db } from './db'
 export async function seedSampleData() {
   try {
     // 再次检查，防止并发
-    const count = await db.organization.count()
-    if (count > 0) {
-      console.log('[seed-data] 已有机构数据，跳过初始化')
+    const orgCount = await db.organization.count()
+    const students = await db.student.findMany()
+    
+    if (orgCount > 0 && students.length > 0) {
+      console.log('[seed-data] 已有机构+学生数据，跳过初始化')
       return
     }
 
-    // 1. 机构信息
-    const org = await db.organization.create({
-      data: {
-        name: '星玥艺术',
-        slogan: '让每个孩子都拥有属于自己的画展',
-        logo: '/logo-xingyue.png',
-        defaultStyle: 'modern',
-        adminPassword: 'art2025',
-      },
-    })
-    console.log('[seed-data] ✅ 机构已创建:', org.name)
+    // 1. 机构信息（仅当机构为空时创建）
+    let org = orgCount === 0 ? null : undefined
+    if (orgCount === 0) {
+      org = await db.organization.create({
+        data: {
+          name: '星玥艺术',
+          slogan: '让每个孩子都拥有属于自己的画展',
+          logo: '/logo-xingyue.png',
+          defaultStyle: 'modern',
+          adminPassword: 'art2025',
+        },
+      })
+      console.log('[seed-data] ✅ 机构已创建:', org.name)
+    }
 
-    // 2. 学生（4位示例）
-    const students = await Promise.all([
+    // 2. 学生（仅当学生为空时创建）
+    const newStudents = await Promise.all([
       db.student.create({
         data: {
           name: '小明',
@@ -62,7 +67,7 @@ export async function seedSampleData() {
         },
       }),
     ])
-    console.log('[seed-data] ✅ 已创建', students.length, '位学生')
+    console.log('[seed-data] ✅ 已创建', newStudents.length, '位学生')
 
     // 3. 画作（8幅，使用预设图片路径）
     const artworks = [
@@ -84,7 +89,7 @@ export async function seedSampleData() {
           artworkDate: a.artworkDate,
           description: a.description,
           order: a.order,
-          studentId: students[a.studentIdx].id,
+          studentId: newStudents[a.studentIdx].id,
         },
       })
     }

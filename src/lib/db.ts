@@ -125,6 +125,10 @@ export const db = {
       if (orderBy?.order) sql += ` ORDER BY "order" ${orderBy.order === 'asc' ? 'ASC' : 'DESC'}`
       return await query(sql, args)
     },
+    async findUnique({ where }: { where: { id: string } }) {
+      const rows = await query('SELECT * FROM Artwork WHERE id = ?', [where.id])
+      return rows[0] || null
+    },
     async create({ data }: { data: any }) {
       const keys = Object.keys(data)
       const placeholders = keys.map(() => '?').join(', ')
@@ -156,6 +160,9 @@ export const db = {
       const placeholders = keys.map(() => '?').join(', ')
       await execute(`INSERT INTO Upload (${keys.map(k => `"${k}"`).join(', ')}, "createdAt") VALUES (${placeholders}, datetime('now'))`, Object.values(data))
       return data
+    },
+    async delete({ where }: { where: { id: string } }) {
+      await execute('DELETE FROM Upload WHERE id = ?', [where.id])
     },
   },
 }
