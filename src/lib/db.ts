@@ -4,27 +4,33 @@ import { createClient } from '@libsql/client'
 
 // ============ Vercel/Turso 适配 ============
 // 使用 libSQL (Turso) 作为数据库驱动，兼容 Vercel serverless 环境
-// 也兼容本地开发（本地 SQLite 文件 或 本地 Turso 实例）
 
 function createPrismaClient(): PrismaClient {
   const databaseUrl = process.env.DATABASE_URL
 
   if (!databaseUrl) {
-    throw new Error('DATABASE_URL 环境变量未设置。请在 .env 或 Vercel 环境变量中配置。')
+    console.error('[db] DATABASE_URL 未设置')
+    // 返回一个会报错的 client，而不是 throw（避免模块加载崩溃）
+    return new PrismaClient({ log: ['error'] })
   }
 
-  // 如果是 libSQL/Turso URL (libsql:// 或 libsqls://)，使用适配器
+  // 如果是 libSQL/Turso URL，使用适配器
   if (databaseUrl.startsWith('libsql://') || databaseUrl.startsWith('libsqls://')) {
-    const libsql = createClient({
-      url: databaseUrl,
-      authToken: process.env.DATABASE_AUTH_TOKEN,
-    })
-    const adapter = new PrismaLibSQL(libsql)
-    return new PrismaClient({ adapter, log: ['error', 'warn'] } as any)
+    try {
+      const libsql = createClient({
+        url: databaseUrl,
+        authToken: process.env.DATABASE_AUTH_TOKEN,
+      })
+      const adapter = new PrismaLibSQL(libsql)
+      return new PrismaClient({ adapter, log: ['error'] } as any)
+    } catch (e) {
+      console.error('[db] 创建 libSQL client 失败:', e)
+      return new PrismaClient({ log: ['error'] })
+    }
   }
 
-  // 本地 SQLite 文件模式（开发环境）
-  return new PrismaClient({ log: ['error', 'warn'] })
+  // 本地 SQLite 文件模式
+  return new PrismaClient({ log: ['error'] })
 }
 
 const globalForPrisma = globalThis as unknown as {
@@ -35,14 +41,21 @@ export const db = globalForPrisma.prisma ?? createPrismaClient()
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = db
 
-// 启动后检查：如果是全新空库（无机构数据），自动初始化示例数据
-db.organization
-  .count()
-  .then(async (count) => {
+// 自动初始化 seed 数据（延迟执行，不阻塞模块加载，失败不影响请求）
+let seedInitialized = false
+export async function ensureSeedData() {
+  if (seedInitialized) return
+  seedInitialized = true
+  try {
+    const count = await db.organization.count()
     if (count === 0) {
       console.log('[db] 检测到空数据库，自动初始化示例数据...')
       const { seedSampleData } = await import('./seed-data')
       await seedSampleData()
+      console.log('[db] 示例数据初始化完成')
     }
-  })
-  .catch((e) => console.error('[db] 初始化检查失败:', e))
+  } catch (e) {
+    console.error('[db] seed 检查失败:', e)
+    seedInitialized = false // 允许下次重试
+  }
+}

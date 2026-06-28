@@ -1,4 +1,4 @@
-import { db } from '@/lib/db'
+import { db, ensureSeedData } from '@/lib/db'
 import { StudentCard } from '@/components/home/student-card'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
@@ -22,6 +22,7 @@ export default async function HomePage({
   let org: { name: string; slogan: string | null; logo: string | null } | null = null
   let students: Array<{ id: string; name: string; age: string | null; bio: string | null; order: number; artworks: { imageUrl: string }[] }> = []
   try {
+    await ensureSeedData()
     ;[org, students] = await Promise.all([
       db.organization.findFirst(),
       db.student.findMany({
