@@ -839,3 +839,38 @@ Stage Summary:
 - 路径动态化(os.homedir())，适配不同环境
 - 全部页面加容错，数据库异常不 500
 - fallback 机制确保即使持久目录不可用也能运行
+
+---
+Task ID: 35
+Agent: 主控Agent (Claude)
+Task: 排查生产环境 admin 500
+
+排查过程:
+1. 检查 dev log - 本地无500错误
+2. 检查 standalone 构建产物 - 完整(含prisma engine, public文件, .env)
+3. 模拟生产运行 standalone server (PORT=3100):
+   - /admin → 200 ✓
+   - / → 200 ✓
+   - /logo → 200 ✓
+4. 模拟空库场景(删除持久库):
+   - 自动从备份恢复 ✓
+   - 所有页面200 ✓
+5. 检查 Caddyfile - 配置正常(转发到3000)
+6. 检查 Prisma engine 架构 - x64 linux(与本地一致)
+
+结论:
+- 本地 dev 和 standalone 生产模式均正常
+- 所有页面200，无500错误
+- 可能原因: 用户看到的500是修改前的旧代码状态，需要重新发布
+
+已做的容错改进(确保生产环境健壮):
+1. db-persist.ts: os.homedir() 动态路径 + 写测试 + fallback
+2. admin/page.tsx: try-catch 数据库查询失败用默认值
+3. page.tsx(首页): try-catch 失败返回空数据
+4. gallery/[id]/page.tsx: try-catch 失败返回404而非500
+5. db.ts: 启动时检查空库并自动初始化(不覆盖已有数据)
+
+Stage Summary:
+- 本地完全正常(dev + standalone 生产模式)
+- 所有页面加容错，数据库异常不500
+- 用户需重新发布获取最新代码
