@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
 
-// 上传画作（需口令）- multipart/form-data
-// 字段: file (图片), studentId, title, artworkDate?, description?
+// 上传画作（需口令）
 export async function POST(req: NextRequest) {
   try {
     const { verifyAdmin } = await import('@/lib/admin')
@@ -22,47 +20,85 @@ export async function POST(req: NextRequest) {
     if (!studentId) return NextResponse.json({ error: '缺少学生ID' }, { status: 400 })
     if (!title || !title.trim()) return NextResponse.json({ error: '缺少画作名称' }, { status: 400 })
 
-    // 校验学生存在
+    const { db } = await import('@/lib/db')
     const student = await db.student.findUnique({ where: { id: studentId } })
     if (!student) return NextResponse.json({ error: '学生不存在' }, { status: 404 })
 
-    // 校验文件类型
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json({ error: '仅支持 JPG/PNG/WEBP/GIF 格式' }, { status: 400 })
     }
 
-    // 校验文件大小 (4MB - Vercel serverless body 限制)
     if (file.size > 4 * 1024 * 1024) {
       return NextResponse.json({ error: '图片大小不能超过 4MB' }, { status: 400 })
     }
 
-    // 读取文件二进制，转 base64 存储
+    // 读取文件
     const arrayBuffer = await file.arrayBuffer()
-    const buffer = Buffer.from(arrayBuffer)
-    const base64Data = buffer.toString('base64')
+    const originalBuffer = Buffer.from(arrayBuffer)
 
-    // 存储到 Upload 表
-    const uploadId = (await query('SELECT lower(hex(randomblob(12))) as id'))[0].id
-    await execute(
-      'INSERT INTO Upload (id, data, "mimeType", size, "createdAt") VALUES (?, ?, ?, ?, datetime(\'now\'))',
-      [uploadId, base64Data, file.type, buffer.length]
-    )
+    // 用 sharp 压缩
+    let compressedBuffer: Buffer
+    let storeMime: string
+
+    if (file.type === 'image/gif') {
+      // GIF 保留原样（保留动画）
+      compressedBuffer = originalBuffer
+      storeMime = 'image/gif'
+    } else {
+      try {
+        compressedBuffer = await sharp(originalBuffer)
+          .resize(1000, 1300, { fit: 'inside', withoutEnlargement: true })
+          .jpeg({ quality: 75, progressive: true })
+          .toBuffer()
+        storeMime = 'image/jpeg'
+      } catch (sharpErr) {
+        // sharp 失败则用原图
+        console.error('[upload] sharp failed, using original:', sharpErr)
+        compressedBuffer = originalBuffer
+        storeMime = file.type
+      }
+    }
+
+    console.log(`[upload] 压缩: ${originalBuffer.length} → ${compressedBuffer.length} bytes (${Math.round(compressedBuffer.length / 1024)}KB)`)
+
+    // base64 存储
+    const base64Data = compressedBuffer.toString('base64')
+
+    const { createClient } = await import('@libsql/client')
+    const libsql = createClient({
+      url: process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL || '',
+      authToken: process.env.DATABASE_AUTH_TOKEN,
+    })
+
+    // 生成 ID
+    const idResult = await libsql.execute("SELECT lower(hex(randomblob(12))) as id")
+    const uploadId = idResult.rows[0].id
+
+    await libsql.execute({
+      sql: 'INSERT INTO Upload (id, data, "mimeType", size, "createdAt") VALUES (?, ?, ?, ?, datetime(\'now\'))',
+      args: [uploadId, base64Data, storeMime, compressedBuffer.length]
+    })
 
     const imageUrl = `/api/image/${uploadId}`
 
     // 取该学生当前最大 order
-    const maxRows = await query('SELECT MAX("order") as maxOrder FROM Artwork WHERE "studentId" = ?', [studentId])
-    const nextOrder = (Number(maxRows[0]?.maxOrder) || -1) + 1
+    const maxResult = await libsql.execute({
+      sql: 'SELECT MAX("order") as maxOrder FROM Artwork WHERE "studentId" = ?',
+      args: [studentId]
+    })
+    const nextOrder = (Number(maxResult.rows[0]?.maxOrder) ?? -1) + 1
 
-    // 创建画作记录
-    const artId = (await query('SELECT lower(hex(randomblob(12))) as id'))[0].id
-    await execute(
-      'INSERT INTO Artwork (id, title, "imageUrl", "artworkDate", description, "order", "studentId", "createdAt", "updatedAt") VALUES (?, ?, ?, ?, ?, ?, ?, datetime(\'now\'), datetime(\'now\'))',
-      [artId, title.trim(), imageUrl, artworkDate, description, nextOrder, studentId]
-    )
+    const artIdResult = await libsql.execute("SELECT lower(hex(randomblob(12))) as id")
+    const artId = artIdResult.rows[0].id
 
-    const artwork = (await query('SELECT * FROM Artwork WHERE id = ?', [artId]))[0]
+    await libsql.execute({
+      sql: 'INSERT INTO Artwork (id, title, "imageUrl", "artworkDate", description, "order", "studentId", "createdAt", "updatedAt") VALUES (?, ?, ?, ?, ?, ?, ?, datetime(\'now\'), datetime(\'now\'))',
+      args: [artId, title.trim(), imageUrl, artworkDate, description, nextOrder, studentId]
+    })
+
+    const result = await libsql.execute({ sql: 'SELECT * FROM Artwork WHERE id = ?', args: [artId] })
+    const artwork = result.rows[0]
     return NextResponse.json(artwork, { status: 201 })
   } catch (e: any) {
     console.error('[API] artwork upload error:', e)
@@ -70,17 +106,17 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// GET - 获取画作列表
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const studentId = searchParams.get('studentId')
+    const { db } = await import('@/lib/db')
 
     let rows
     if (studentId) {
-      rows = await query('SELECT * FROM Artwork WHERE "studentId" = ? ORDER BY "order" ASC', [studentId])
+      rows = await db.artwork.findMany({ where: { studentId }, orderBy: { order: 'asc' } })
     } else {
-      rows = await query('SELECT * FROM Artwork ORDER BY "createdAt" DESC')
+      rows = await db.artwork.findMany({})
     }
     return NextResponse.json(rows)
   } catch (e: any) {
@@ -88,27 +124,12 @@ export async function GET(req: NextRequest) {
   }
 }
 
-// 辅助函数（直连 libsql）
-import { createClient } from '@libsql/client'
-
-function getClient() {
-  return createClient({
-    url: process.env.TURSO_DATABASE_URL || process.env.DATABASE_URL || '',
-    authToken: process.env.DATABASE_AUTH_TOKEN,
-  })
-}
-
-async function query(sql: string, args: any[] = []) {
-  const client = getClient()
-  const result = await client.execute({ sql, args })
-  return result.rows.map(row => {
-    const obj: any = {}
-    for (const key in row) obj[key] = row[key]
-    return obj
-  })
-}
-
-async function execute(sql: string, args: any[] = []) {
-  const client = getClient()
-  return await client.execute({ sql, args })
+// sharp 动态导入
+let _sharp: any
+async function sharp(buf: Buffer) {
+  if (!_sharp) {
+    const mod = await import('sharp')
+    _sharp = mod.default || mod
+  }
+  return _sharp(buf)
 }
