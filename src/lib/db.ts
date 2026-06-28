@@ -108,6 +108,10 @@ export const db = {
       await execute('DELETE FROM Student WHERE id = ?', [where.id])
       return rows[0]
     },
+    async aggregate({ _max }: any = {}) {
+      const rows = await query('SELECT MAX("order") as maxOrder FROM Student')
+      return { _max: { order: rows[0]?.maxOrder ?? 0 } }
+    },
   },
 
   artwork: {
