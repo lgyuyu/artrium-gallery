@@ -206,7 +206,7 @@ function UploadDialog({
     let rejected = 0
     for (const f of files) {
       if (!validTypes.includes(f.type)) { rejected++; continue }
-      if (f.size > 10 * 1024 * 1024) {
+      if (f.size > 12 * 1024 * 1024) {
         toast.error(`${f.name} 超过 10MB，已跳过`)
         rejected++
         continue

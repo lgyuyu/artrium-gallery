@@ -29,8 +29,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '仅支持 JPG/PNG/WEBP/GIF 格式' }, { status: 400 })
     }
 
-    if (file.size > 4 * 1024 * 1024) {
-      return NextResponse.json({ error: '图片大小不能超过 4MB' }, { status: 400 })
+    if (file.size > 12 * 1024 * 1024) {
+      return NextResponse.json({ error: '图片大小不能超过 12MB' }, { status: 400 })
     }
 
     // 读取文件
