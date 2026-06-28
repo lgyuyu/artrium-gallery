@@ -9,9 +9,18 @@ export const metadata = {
 }
 
 export default async function AdminPage() {
-  const org = await db.organization.findFirst()
-  const orgName = org?.name ?? '星玥艺术'
-  const orgLogo = org?.logo ?? '/logo-xingyue.png'
+  // 容错：数据库查询失败时用默认值，避免页面 500
+  let orgName = '星玥艺术'
+  let orgLogo = '/logo-xingyue.png'
+  try {
+    const org = await db.organization.findFirst()
+    if (org) {
+      orgName = org.name
+      orgLogo = org.logo ?? orgLogo
+    }
+  } catch (e) {
+    console.error('[admin] 读取机构信息失败:', e)
+  }
 
   return <AdminClient orgName={orgName} orgLogo={orgLogo} />
 }

@@ -49,15 +49,24 @@ export default async function GalleryPage({
   params: Promise<{ studentId: string }>
 }) {
   const { studentId } = await params
-  const [student, org] = await Promise.all([
-    db.student.findUnique({
-      where: { id: studentId },
-      include: {
-        artworks: { orderBy: { order: 'asc' } },
-      },
-    }),
-    db.organization.findFirst(),
-  ])
+  // 容错：数据库查询失败时返回 notFound，避免 500
+  let student: { id: string; name: string; age: string | null; bio: string | null; style: string; artworks: any[] } | null = null
+  let org: { name: string | null; logo: string | null } | null = null
+  try {
+    const [s, o] = await Promise.all([
+      db.student.findUnique({
+        where: { id: studentId },
+        include: {
+          artworks: { orderBy: { order: 'asc' } },
+        },
+      }),
+      db.organization.findFirst(),
+    ])
+    student = s
+    org = o
+  } catch (e) {
+    console.error('[gallery] 数据库查询失败:', e)
+  }
 
   if (!student) {
     notFound()

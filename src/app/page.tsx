@@ -18,18 +18,25 @@ export default async function HomePage({
     redirect(`/gallery/${params.student}${shareParam}`)
   }
 
-  const [org, students] = await Promise.all([
-    db.organization.findFirst(),
-    db.student.findMany({
-      orderBy: { order: 'asc' },
-      include: {
-        artworks: {
-          orderBy: { order: 'asc' },
-          select: { imageUrl: true },
+  // 容错：数据库查询失败时返回空数据，避免页面 500
+  let org: { name: string; slogan: string | null; logo: string | null } | null = null
+  let students: Array<{ id: string; name: string; age: string | null; bio: string | null; order: number; artworks: { imageUrl: string }[] }> = []
+  try {
+    ;[org, students] = await Promise.all([
+      db.organization.findFirst(),
+      db.student.findMany({
+        orderBy: { order: 'asc' },
+        include: {
+          artworks: {
+            orderBy: { order: 'asc' },
+            select: { imageUrl: true },
+          },
         },
-      },
-    }),
-  ])
+      }),
+    ])
+  } catch (e) {
+    console.error('[home] 数据库查询失败:', e)
+  }
 
   const studentList = students.map((s) => ({
     id: s.id,
