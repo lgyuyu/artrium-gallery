@@ -1,6 +1,3 @@
-// VR线上画展 - Prisma Schema
-// 艺境美术 ARTRIUM
-
 generator client {
   provider = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
@@ -8,55 +5,6 @@ generator client {
 
 datasource db {
   provider = "sqlite"
+  // 构建时如果 DATABASE_URL 没设置，用这个占位（driver adapter 模式下 schema 的 url 不会被直接使用）
   url      = env("DATABASE_URL")
-}
-
-// 机构信息（单条记录，V1.0 全局一个机构）
-model Organization {
-  id            String   @id @default(cuid())
-  name          String   @default("艺境美术 ARTRIUM")
-  slogan        String?  // 副标题，如"学生画展"
-  logo          String?  // logo 图片路径
-  defaultStyle  String   @default("modern") // modern | cozy 全局默认风格
-  adminPassword String   @default("art2025") // 管理后台口令
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-
-// 学生
-model Student {
-  id        String   @id @default(cuid())
-  name      String
-  age       String?  // 年龄或班级，字符串灵活存储
-  bio       String?  // 简介
-  style     String   @default("modern") // 展厅风格 modern | cozy
-  order     Int      @default(0) // 在大厅的排序
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  artworks  Artwork[]
-}
-
-// 画作
-model Artwork {
-  id          String   @id @default(cuid())
-  title       String   // 画作名称
-  imageUrl    String   // 图片访问路径（/api/image/[uploadId] 或 /artworks/xxx 预设图）
-  artworkDate String?  // 创作时间（字符串，灵活，如"2025年5月"）
-  description String?  // 简短描述
-  order       Int      @default(0) // 墙上展示顺序
-  studentId   String
-  student     Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([studentId])
-}
-
-// 上传文件（图片二进制存数据库，彻底避免发布丢失）
-model Upload {
-  id        String   @id @default(cuid())
-  data      Bytes    // 图片二进制数据
-  mimeType  String   // image/jpeg, image/png 等
-  size      Int      // 文件大小（字节）
-  createdAt DateTime @default(now())
 }
