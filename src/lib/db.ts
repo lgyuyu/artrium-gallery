@@ -4,17 +4,36 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
+// 创建 Prisma client（懒加载模式）
 function createPrismaClient(): PrismaClient {
-  return new PrismaClient({
-    log: ['error'],
-  })
+  const url = process.env.DATABASE_URL || ''
+
+  if (url.startsWith('libsql://') || url.startsWith('libsqls://')) {
+    // 运行时：用 driver adapter 连 Turso
+    // 用 require 而不是 import，避免构建时静态分析加载 adapter
+    const { PrismaLibSQL } = require('@prisma/adapter-libsql')
+    const { createClient } = require('@libsql/client')
+    const libsql = createClient({ url, authToken: process.env.DATABASE_AUTH_TOKEN })
+    const adapter = new PrismaLibSQL(libsql)
+    return new PrismaClient({ adapter })
+  }
+
+  // 本地开发或构建时（file: URL 或无 URL）
+  return new PrismaClient()
 }
 
-export const db = globalForPrisma.prisma ?? createPrismaClient()
+// 只在非构建环境下创建 client
+if (!globalForPrisma.prisma) {
+  try {
+    globalForPrisma.prisma = createPrismaClient()
+  } catch (e) {
+    console.error('[db] 创建 Prisma client 失败:', e)
+  }
+}
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = db
+export const db = globalForPrisma.prisma || new PrismaClient()
 
-// 自动初始化 seed 数据（延迟执行，不阻塞模块加载）
+// 延迟初始化 seed 数据
 let seedInitialized = false
 export async function ensureSeedData() {
   if (seedInitialized) return
@@ -22,13 +41,12 @@ export async function ensureSeedData() {
   try {
     const count = await db.organization.count()
     if (count === 0) {
-      console.log('[db] 检测到空数据库，自动初始化示例数据...')
+      console.log('[db] 初始化示例数据...')
       const { seedSampleData } = await import('./seed-data')
       await seedSampleData()
-      console.log('[db] 示例数据初始化完成')
     }
   } catch (e) {
-    console.error('[db] seed 检查失败:', e)
+    console.error('[db] seed 失败:', e)
     seedInitialized = false
   }
 }
