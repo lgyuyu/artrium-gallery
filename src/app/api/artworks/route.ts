@@ -37,23 +37,25 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await file.arrayBuffer()
     const originalBuffer = Buffer.from(arrayBuffer)
 
-    // 用 sharp 压缩
+    // 用 sharp 压缩 - 分步处理避免内存溢出
     let compressedBuffer: Buffer
     let storeMime: string
 
     if (file.type === 'image/gif') {
-      // GIF 保留原样（保留动画）
       compressedBuffer = originalBuffer
       storeMime = 'image/gif'
     } else {
       try {
-        compressedBuffer = await sharp(originalBuffer)
-          .resize(1000, 1300, { fit: 'inside', withoutEnlargement: true })
-          .jpeg({ quality: 75, progressive: true })
+        // 先缩小尺寸，再压缩质量，减少内存占用
+        let pipeline = sharp(originalBuffer)
+          .rotate() // 自动校正旋转方向（手机照片 EXIF）
+          .resize(800, 1067, { fit: 'inside', withoutEnlargement: true })
+
+        compressedBuffer = await pipeline
+          .jpeg({ quality: 70, progressive: true, mozjpeg: true })
           .toBuffer()
         storeMime = 'image/jpeg'
       } catch (sharpErr) {
-        // sharp 失败则用原图
         console.error('[upload] sharp failed, using original:', sharpErr)
         compressedBuffer = originalBuffer
         storeMime = file.type
