@@ -1,17 +1,29 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Calendar, ExternalLink, ZoomIn } from 'lucide-react'
+import { X, Calendar, ExternalLink, ZoomIn, ChevronLeft, ChevronRight } from 'lucide-react'
 import type { Artwork3D } from './gallery-scene'
 
 interface ArtworkDetailProps {
   artwork: Artwork3D | null
   onClose: () => void
+  onPrevious: () => void
+  onNext: () => void
+  hasPrevious: boolean
+  hasNext: boolean
 }
 
-export function ArtworkDetail({ artwork, onClose }: ArtworkDetailProps) {
+export function ArtworkDetail({
+  artwork,
+  onClose,
+  onPrevious,
+  onNext,
+  hasPrevious,
+  hasNext,
+}: ArtworkDetailProps) {
   const [zoomed, setZoomed] = useState(false)
+  const touchStartX = useRef<number | null>(null)
 
   // ESC 关闭
   useEffect(() => {
@@ -20,10 +32,12 @@ export function ArtworkDetail({ artwork, onClose }: ArtworkDetailProps) {
         if (zoomed) setZoomed(false)
         else onClose()
       }
+      if (e.key === 'ArrowLeft' && hasPrevious) onPrevious()
+      if (e.key === 'ArrowRight' && hasNext) onNext()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [onClose, zoomed])
+  }, [hasNext, hasPrevious, onClose, onNext, onPrevious, zoomed])
 
   // 锁定滚动
   useEffect(() => {
@@ -35,6 +49,22 @@ export function ArtworkDetail({ artwork, onClose }: ArtworkDetailProps) {
     }
   }, [artwork])
 
+  const handleTouchStart = (event: React.TouchEvent) => {
+    touchStartX.current = event.touches[0]?.clientX ?? null
+  }
+
+  const handleTouchEnd = (event: React.TouchEvent) => {
+    if (touchStartX.current === null) return
+    const endX = event.changedTouches[0]?.clientX ?? touchStartX.current
+    const distance = endX - touchStartX.current
+    touchStartX.current = null
+
+    if (distance > 60 && hasPrevious) onPrevious()
+    if (distance < -60 && hasNext) onNext()
+  }
+
+  const navigationButtonClass = 'absolute top-1/2 z-30 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur-md transition-colors hover:bg-black/80 disabled:pointer-events-none disabled:opacity-25 sm:h-12 sm:w-12'
+
   return (
     <AnimatePresence>
       {artwork && (
@@ -45,6 +75,8 @@ export function ArtworkDetail({ artwork, onClose }: ArtworkDetailProps) {
           transition={{ duration: 0.3 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8 bg-black/85 backdrop-blur-md"
           onClick={onClose}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
         >
           {/* 关闭按钮 */}
           <button
@@ -55,6 +87,31 @@ export function ArtworkDetail({ artwork, onClose }: ArtworkDetailProps) {
             <X className="h-4 w-4" />
             <span className="hidden sm:inline">关闭</span>
             <span className="text-xs opacity-60 ml-1">ESC</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation()
+              onPrevious()
+            }}
+            disabled={!hasPrevious}
+            className={`${navigationButtonClass} left-2 sm:left-5`}
+            aria-label="查看上一幅画作"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation()
+              onNext()
+            }}
+            disabled={!hasNext}
+            className={`${navigationButtonClass} right-2 sm:right-5`}
+            aria-label="查看下一幅画作"
+          >
+            <ChevronRight className="h-6 w-6" />
           </button>
 
           <motion.div
@@ -115,9 +172,11 @@ export function ArtworkDetail({ artwork, onClose }: ArtworkDetailProps) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-20 bg-black flex items-center justify-center p-2"
-                onClick={() => setZoomed(false)}
-              >
+              className="fixed inset-0 z-20 bg-black flex items-center justify-center p-2"
+              onClick={() => setZoomed(false)}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
                 <img
                   src={artwork.imageUrl}
                   alt={artwork.title}
@@ -129,6 +188,30 @@ export function ArtworkDetail({ artwork, onClose }: ArtworkDetailProps) {
                   className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white"
                 >
                   <X className="h-5 w-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onPrevious()
+                  }}
+                  disabled={!hasPrevious}
+                  className={`${navigationButtonClass} left-2 sm:left-5`}
+                  aria-label="查看上一幅画作"
+                >
+                  <ChevronLeft className="h-6 w-6" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    onNext()
+                  }}
+                  disabled={!hasNext}
+                  className={`${navigationButtonClass} right-2 sm:right-5`}
+                  aria-label="查看下一幅画作"
+                >
+                  <ChevronRight className="h-6 w-6" />
                 </button>
               </motion.div>
             )}

@@ -67,7 +67,7 @@ export function StudentsTab() {
               <div className="flex-1 min-w-0">
                 <h3 className="font-medium truncate">{s.name}</h3>
                 <p className="text-xs text-muted-foreground truncate">{s.age || '未填写班级'}</p>
-                <p className="text-xs text-gold mt-0.5">{s.artworkCount} 幅作品 · {s.style === 'cozy' ? '温馨' : '简约'}</p>
+                <p className="text-xs text-gold mt-0.5">{s.artworkCount} 幅作品 · {s.style === 'museum' ? '策展美术馆' : s.style === 'cozy' ? '温馨' : '简约'}</p>
                 <div className="flex items-center gap-1 mt-2">
                   <StudentDialog student={s} onSaved={load} trigger={
                     <Button variant="ghost" size="sm" className="h-7 px-2 text-xs"><Pencil className="h-3 w-3" /></Button>
@@ -161,7 +161,7 @@ function StudentDialog({
           </div>
           <div className="space-y-2">
             <Label>展厅风格</Label>
-            <RadioGroup value={style} onValueChange={setStyle} className="grid grid-cols-2 gap-3">
+            <RadioGroup value={style} onValueChange={setStyle} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <label htmlFor={`style-modern-${isEdit ? 'e' : 'n'}`} className="flex items-start gap-2 p-3 rounded-lg border cursor-pointer hover:bg-accent/40 has-[:checked]:border-gold has-[:checked]:bg-accent/60">
                 <RadioGroupItem value="modern" id={`style-modern-${isEdit ? 'e' : 'n'}`} className="mt-0.5" />
                 <div className="text-sm">
@@ -174,6 +174,13 @@ function StudentDialog({
                 <div className="text-sm">
                   <p className="font-medium">温馨家居风</p>
                   <p className="text-xs text-muted-foreground mt-0.5">暖墙 + 地毯，像家里的客厅</p>
+                </div>
+              </label>
+              <label htmlFor={`style-museum-${isEdit ? 'e' : 'n'}`} className="flex items-start gap-2 p-3 rounded-lg border cursor-pointer hover:bg-accent/40 has-[:checked]:border-gold has-[:checked]:bg-accent/60">
+                <RadioGroupItem value="museum" id={`style-museum-${isEdit ? 'e' : 'n'}`} className="mt-0.5" />
+                <div className="text-sm">
+                  <p className="font-medium">策展美术馆</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">迎宾墙 + 轨道灯，作品按真实比例展示</p>
                 </div>
               </label>
             </RadioGroup>

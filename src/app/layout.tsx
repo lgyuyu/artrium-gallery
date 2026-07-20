@@ -9,6 +9,7 @@ const geistSans = Geist({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://xinyueyishu.top"),
   title: "星玥艺术 · 学生线上画展",
   description: "星玥艺术 — 让每个孩子都拥有属于自己的画展。360° VR 沉浸式线上展厅。",
   keywords: ["星玥艺术", "画展", "VR展厅", "线上画展", "儿童美术", "学生作品"],

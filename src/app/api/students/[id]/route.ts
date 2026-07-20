@@ -50,7 +50,7 @@ export async function PATCH(
       ...(name !== undefined && typeof name === 'string' && name.trim() && { name: name.trim() }),
       ...(age !== undefined && { age: age?.trim() || null }),
       ...(bio !== undefined && { bio: bio?.trim() || null }),
-      ...(style !== undefined && (style === 'cozy' || style === 'modern') && { style }),
+      ...(style !== undefined && (style === 'cozy' || style === 'modern' || style === 'museum') && { style }),
       ...(order !== undefined && typeof order === 'number' && { order }),
     },
   })

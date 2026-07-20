@@ -28,9 +28,13 @@ export async function generateMetadata({
   return {
     title: `${student.name}的线上画展 · ${orgName}`,
     description: `${orgName} · 学生作品展示 — 360° VR 沉浸式线上展厅`,
+    alternates: {
+      canonical: `/gallery/${studentId}`,
+    },
     openGraph: {
       title: `${student.name}的线上画展`,
       description: `${orgName} · 学生作品展示`,
+      url: `/gallery/${studentId}`,
       images: coverImage ? [{ url: coverImage, width: 864, height: 1152 }] : [],
       type: 'website',
     },

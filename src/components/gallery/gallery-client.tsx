@@ -72,7 +72,19 @@ export function GalleryClient({ student, artworks, orgName, orgLogo }: GalleryCl
     return () => clearTimeout(t)
   }, [ready])
 
-  const style = (student.style === 'cozy' ? 'cozy' : 'modern') as 'modern' | 'cozy'
+  const style = (student.style === 'cozy' || student.style === 'museum' ? student.style : 'modern') as 'modern' | 'cozy' | 'museum'
+  const styleName = style === 'museum' ? '策展美术馆' : style === 'cozy' ? '温馨家居展厅' : '现代简约画廊'
+  const selectedIndex = selected ? artworks.findIndex((artwork) => artwork.id === selected.id) : -1
+  const hasPreviousArtwork = selectedIndex > 0
+  const hasNextArtwork = selectedIndex >= 0 && selectedIndex < artworks.length - 1
+
+  const showPreviousArtwork = () => {
+    if (hasPreviousArtwork) setSelected(artworks[selectedIndex - 1])
+  }
+
+  const showNextArtwork = () => {
+    if (hasNextArtwork) setSelected(artworks[selectedIndex + 1])
+  }
 
   return (
     <main className="fixed inset-0 bg-black overflow-hidden">
@@ -83,6 +95,8 @@ export function GalleryClient({ student, artworks, orgName, orgLogo }: GalleryCl
           style={style}
           onSelect={setSelected}
           isMobile={isMobile as boolean}
+          studentName={student.name}
+          orgName={orgName}
         />
       )}
 
@@ -112,7 +126,7 @@ export function GalleryClient({ student, artworks, orgName, orgLogo }: GalleryCl
                   {student.name}的画展
                 </h1>
                 <p className="text-[10px] text-white/60 tracking-wider">
-                  {orgName} · {style === 'modern' ? '现代简约画廊' : '温馨家居展厅'}
+                  {orgName} · {styleName}
                 </p>
               </div>
             </div>
@@ -123,8 +137,12 @@ export function GalleryClient({ student, artworks, orgName, orgLogo }: GalleryCl
               studentAge={student.age}
               coverImage={artworks[0]?.imageUrl}
               orgName={orgName}
+              orgLogo={orgLogo}
               trigger={
-                <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-white text-sm hover:bg-white/20 transition-colors">
+                <button
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md text-white text-sm hover:bg-white/20 transition-colors"
+                  aria-label="分享画展"
+                >
                   <Share2 className="h-4 w-4" />
                   <span className="hidden sm:inline">分享</span>
                 </button>
@@ -208,7 +226,14 @@ export function GalleryClient({ student, artworks, orgName, orgLogo }: GalleryCl
       </AnimatePresence>
 
       {/* 画作详情浮层 */}
-      <ArtworkDetail artwork={selected} onClose={() => setSelected(null)} />
+      <ArtworkDetail
+        artwork={selected}
+        onClose={() => setSelected(null)}
+        onPrevious={showPreviousArtwork}
+        onNext={showNextArtwork}
+        hasPrevious={hasPreviousArtwork}
+        hasNext={hasNextArtwork}
+      />
     </main>
   )
 }

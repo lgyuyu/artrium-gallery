@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
         name: name.trim(),
         age: age?.trim() || null,
         bio: bio?.trim() || null,
-        style: style === 'cozy' ? 'cozy' : 'modern',
+        style: style === 'cozy' || style === 'museum' ? style : 'modern',
         order: nextOrder,
       },
     })

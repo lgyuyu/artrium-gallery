@@ -20,6 +20,13 @@ node_modules
 # production
 /build
 
+# local databases and data snapshots
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
 # misc
 .DS_Store
 *.pem

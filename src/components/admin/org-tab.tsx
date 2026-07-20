@@ -120,7 +120,7 @@ export function OrgTab() {
         <div className="space-y-2 pt-2">
           <Label>默认展厅风格</Label>
           <p className="text-xs text-muted-foreground -mt-1">新创建学生时默认使用此风格（已建学生可在「学生管理」单独修改）</p>
-          <RadioGroup value={defaultStyle} onValueChange={setDefaultStyle} className="grid grid-cols-2 gap-3">
+          <RadioGroup value={defaultStyle} onValueChange={setDefaultStyle} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <label htmlFor="ds-modern" className="flex items-start gap-2 p-3 rounded-lg border cursor-pointer hover:bg-accent/40 has-[:checked]:border-gold has-[:checked]:bg-accent/60">
               <RadioGroupItem value="modern" id="ds-modern" className="mt-0.5" />
               <div className="text-sm">
@@ -133,6 +133,13 @@ export function OrgTab() {
               <div className="text-sm">
                 <p className="font-medium">温馨家居风</p>
                 <p className="text-xs text-muted-foreground mt-0.5">暖墙 + 地毯</p>
+              </div>
+            </label>
+            <label htmlFor="ds-museum" className="flex items-start gap-2 p-3 rounded-lg border cursor-pointer hover:bg-accent/40 has-[:checked]:border-gold has-[:checked]:bg-accent/60">
+              <RadioGroupItem value="museum" id="ds-museum" className="mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium">策展美术馆</p>
+                <p className="text-xs text-muted-foreground mt-0.5">迎宾墙 + 轨道灯</p>
               </div>
             </label>
           </RadioGroup>
