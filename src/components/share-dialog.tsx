@@ -59,6 +59,7 @@ export function ShareDialog({
   const [copied, setCopied] = useState(false)
   const [posterUrl, setPosterUrl] = useState<string | null>(null)
   const [generatingPoster, setGeneratingPoster] = useState(false)
+  const isWeChat = typeof navigator !== 'undefined' && /MicroMessenger/i.test(navigator.userAgent)
 
   // 直达学生展厅，避免分享抓取器停留在首页重定向响应。
   const shareUrl = typeof window !== 'undefined'
@@ -94,6 +95,19 @@ export function ShareDialog({
       }
       document.body.removeChild(textarea)
     }
+  }
+
+  const handleSavePoster = () => {
+    if (!posterUrl) return
+    if (isWeChat) {
+      toast.info('请长按上方海报图片，选择“保存图片”')
+      return
+    }
+
+    const link = document.createElement('a')
+    link.href = posterUrl
+    link.download = `${studentName}的线上画展.jpg`
+    link.click()
   }
 
   const handleGeneratePoster = async () => {
@@ -245,17 +259,17 @@ export function ShareDialog({
 
           {posterUrl && (
             <div className="space-y-2">
-              <p className="text-xs text-muted-foreground">朋友圈海报（手机可长按图片保存）</p>
+              <p className="text-xs text-muted-foreground">
+                {isWeChat ? '微信内请长按下方海报，选择“保存图片”' : '朋友圈海报（手机可长按图片保存）'}
+              </p>
               <img
                 src={posterUrl}
                 alt={`${studentName}的线上画展分享海报`}
                 className="w-full border bg-muted object-contain shadow-sm"
               />
-              <Button asChild size="sm" variant="outline" className="w-full">
-                <a href={posterUrl} download={`${studentName}的线上画展.jpg`}>
-                  <ImageDown className="h-4 w-4 mr-1" />
-                  保存海报
-                </a>
+              <Button size="sm" variant="outline" className="w-full" onClick={handleSavePoster}>
+                <ImageDown className="h-4 w-4 mr-1" />
+                {isWeChat ? '长按上方海报保存' : '保存海报'}
               </Button>
             </div>
           )}
