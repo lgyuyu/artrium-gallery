@@ -28,6 +28,10 @@ interface GallerySlot {
 const ROOM_W = 14     // 宽（x）
 const ROOM_D = 11     // 深（z）
 const WALL_H = 4.62   // 墙高 (+10%)
+const CAMERA_MIN = new THREE.Vector3(-ROOM_W / 2 + 0.55, 1, -ROOM_D / 2 + 0.55)
+const CAMERA_MAX = new THREE.Vector3(ROOM_W / 2 - 0.55, 3.1, ROOM_D / 2 - 0.55)
+const TARGET_MIN = new THREE.Vector3(-ROOM_W / 2 + 1.1, 1.05, -ROOM_D / 2 + 1.1)
+const TARGET_MAX = new THREE.Vector3(ROOM_W / 2 - 1.1, 2.4, ROOM_D / 2 - 1.1)
 
 // ============ 风格配置（参考视频：明亮简洁，木地板，白框，轨道射灯有光斑） ============
 // ============ 风格配置（参考图：灰色墙+浅灰顶+白地+黑色画框+暖白聚光+墙顶灯带） ============
@@ -750,6 +754,8 @@ function CameraRig({ isMobile, style }: { isMobile: boolean; style: Style }) {
   const controlsRef = useRef<any>(null)
   const { camera } = useThree()
   const keys = useRef<Record<string, boolean>>({})
+  const previousPosition = useRef(new THREE.Vector3())
+  const correction = useRef(new THREE.Vector3())
 
   useEffect(() => {
     // 移动端与 PC 端同步：站在入口处（z=4），看向后墙
@@ -777,47 +783,54 @@ function CameraRig({ isMobile, style }: { isMobile: boolean; style: Style }) {
   }, [isMobile])
 
   useFrame((_, delta) => {
-    if (isMobile) return
-    const speed = 4 * delta
-    const forward = new THREE.Vector3()
-    camera.getWorldDirection(forward)
-    forward.y = 0
-    if (forward.lengthSq() > 0) forward.normalize()
-    const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize()
+    const controls = controlsRef.current
 
-    const move = new THREE.Vector3()
-    if (keys.current['w'] || keys.current['arrowup']) move.add(forward)
-    if (keys.current['s'] || keys.current['arrowdown']) move.sub(forward)
-    if (keys.current['a'] || keys.current['arrowleft']) move.sub(right)
-    if (keys.current['d'] || keys.current['arrowright']) move.add(right)
+    if (!isMobile) {
+      const speed = 4 * delta
+      const forward = new THREE.Vector3()
+      camera.getWorldDirection(forward)
+      forward.y = 0
+      if (forward.lengthSq() > 0) forward.normalize()
+      const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize()
 
-    if (move.lengthSq() > 0) {
-      move.normalize().multiplyScalar(speed)
-      camera.position.add(move)
-      if (controlsRef.current) {
-        controlsRef.current.target.add(move)
+      const move = new THREE.Vector3()
+      if (keys.current['w'] || keys.current['arrowup']) move.add(forward)
+      if (keys.current['s'] || keys.current['arrowdown']) move.sub(forward)
+      if (keys.current['a'] || keys.current['arrowleft']) move.sub(right)
+      if (keys.current['d'] || keys.current['arrowright']) move.add(right)
+
+      if (move.lengthSq() > 0) {
+        move.normalize().multiplyScalar(speed)
+        camera.position.add(move)
+        controls?.target.add(move)
       }
     }
 
-    camera.position.set(
-      THREE.MathUtils.clamp(camera.position.x, -6.4, 6.4),
-      1.6,
-      THREE.MathUtils.clamp(camera.position.z, -4.9, 4.9)
-    )
+    if (!controls) return
+
+    // Keep the camera and its orbit target together when either reaches a wall.
+    previousPosition.current.copy(controls.target)
+    controls.target.clamp(TARGET_MIN, TARGET_MAX)
+    correction.current.copy(controls.target).sub(previousPosition.current)
+    camera.position.add(correction.current)
+
+    previousPosition.current.copy(camera.position)
+    camera.position.clamp(CAMERA_MIN, CAMERA_MAX)
+    correction.current.copy(camera.position).sub(previousPosition.current)
+    controls.target.add(correction.current).clamp(TARGET_MIN, TARGET_MAX)
   })
 
   return (
     <OrbitControls
       ref={controlsRef}
       target={style === 'museum' ? [0, isMobile ? 1.3 : 1.45, -1.5] : [0, 1.6, -1.5]}
-      enablePan={!isMobile}
-      // 移动端允许双指缩放，能在房间内移动观察
+      enablePan={false}
       enableZoom
       enableRotate
-      minDistance={isMobile ? 0.5 : 0.5}
-      maxDistance={isMobile ? 8 : 10}
-      minPolarAngle={0.25}
-      maxPolarAngle={Math.PI - 0.25}
+      minDistance={1.1}
+      maxDistance={6}
+      minPolarAngle={1.22}
+      maxPolarAngle={1.68}
       rotateSpeed={isMobile ? -0.55 : -0.65}
       zoomSpeed={0.9}
       enableDamping
